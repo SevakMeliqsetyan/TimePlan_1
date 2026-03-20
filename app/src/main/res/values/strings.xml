@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">TimePlan</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_personal">Personal</string>
+    <string name="nav_work">Work</string>
+    <string name="nav_connections">Connections</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Planning</string>
+    <string name="home_subtitle">Create personal and work schedules</string>
+    <string name="home_empty_title">No cards yet</string>
+    <string name="home_empty_subtitle">Tap the plus button to create your first card</string>
+    <string name="home_add_card">New Card</string>
+    <string name="home_add_personal">Personal Card</string>
+    <string name="home_add_work">Work Card</string>
+    <string name="empty_cards_message">You don\'t have any cards yet.\nAdd your first card!</string>
+    <string name="add_card">Add Card</string>
+
+    <!-- Personal Card Section -->
+    <string name="personal_card_title">Personal Calendar</string>
+    <string name="personal_tasks_title">Daily Tasks</string>
+    <string name="personal_add_task">Add Task</string>
+    <string name="personal_task_time_hint">Time</string>
+    <string name="personal_task_title_hint">What to do</string>
+    <string name="personal_add_task_button">Save</string>
+    <string name="empty_tasks">No tasks for this day</string>
+    <string name="add_task_hint">Task Description</string>
+    <string name="btn_add">Add</string>
+
+    <!-- Work Card Section -->
+    <string name="work_card_title">Work Calendar</string>
+    <string name="work_profile_title">Work Profile</string>
+    <string name="work_name">First Name</string>
+    <string name="work_surname">Last Name</string>
+    <string name="work_age">Age</string>
+    <string name="work_profession">Profession</string>
+    <string name="work_session_length">Session Length</string>
+    <string name="work_time_start">Start Time</string>
+    <string name="work_time_end">End Time</string>
+    <string name="work_break_start">Break From (optional)</string>
+    <string name="work_break_end">Break To (optional)</string>
+    <string name="work_days_title">Work Days</string>
+    <string name="btn_save_profile">Save Profile</string>
+
+    <!-- Work Slots -->
+    <string name="work_schedule_title">Daily Schedule</string>
+    <string name="work_slot_free">Free</string>
+    <string name="work_slot_busy">Booked</string>
+    <string name="work_slot_client_hint">Client Name</string>
+    <string name="work_slot_save">Save</string>
+    <string name="work_day_hint_working">Working Schedule</string>
+    <string name="work_day_hint_off">Day Off</string>
+    <string name="client_name_hint">Client Name</string>
+
+    <!-- Connections Section -->
+    <string name="connections_title">Connections</string>
+    <string name="connections_subtitle">Other people\'s cards will appear here</string>
+
+    <!-- Setup Profile Screen -->
+    <string name="setup_title">Welcome</string>
+    <string name="setup_subtitle">Enter your name once. We will use it later in your cards.</string>
+    <string name="setup_first_name">First Name</string>
+    <string name="setup_last_name">Last Name</string>
+    <string name="setup_continue">Continue</string>
+
+    <!-- Add Card Bottom Sheet -->
+    <string name="add_card_title">New Card</string>
+    <string name="card_type_personal">Personal</string>
+    <string name="card_type_work">Work</string>
+    <string name="card_name_hint">Card Name (e.g. My Schedule)</string>
+    <string name="btn_create">Create</string>
+
+    <!-- Week Days (Short) -->
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+
+    <!-- Dialog Actions -->
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_save">Save</string>
+    <string name="dialog_delete">Delete</string>
+</resources>

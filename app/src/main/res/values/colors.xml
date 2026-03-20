@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Dark theme palette -->
+    <color name="background_dark">#FF05060A</color>
+    <color name="surface_dark">#FF111521</color>
+    <color name="surface_elevated_dark">#FF181D2A</color>
+    <color name="bottom_nav_background">#FF05060A</color>
+
+    <color name="teal_accent">#FF3DD9C4</color>
+    <color name="purple_accent">#FF8B5CF6</color>
+    <color name="danger_red">#FFEF4444</color>
+
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#B3FFFFFF</color>
+    <color name="divider_dark">#26FFFFFF</color>
+
+    <!-- Slot colors -->
+    <color name="slot_free_background">#3314B8A6</color>
+    <color name="slot_busy_background">#FF14B8A6</color>
+    <color name="slot_border">#6614B8A6</color>
+</resources>
