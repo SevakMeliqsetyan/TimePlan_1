@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "709944858710",
+    "project_id": "time-plan-login-page",
+    "storage_bucket": "time-plan-login-page.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709944858710:android:f8620c1311060dddf843f7",
+        "android_client_info": {
+          "package_name": "sevak.meliqsetyan.samsung_project_timeplan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxIHhgDEZ2fq_tyi_gEBPs0hz5d2PaSt4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

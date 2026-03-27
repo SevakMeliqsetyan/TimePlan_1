@@ -1,18 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "sevak.meliqsetyan.samsung_project_2"
 
-    // ИСПРАВЛЕНО: Установите версию 36
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "sevak.meliqsetyan.samsung_project_2"
+        applicationId = "sevak.meliqsetyan.samsung_project_timeplan"
         minSdk = 26
-
-        // РЕКОМЕНДУЕТСЯ: Также обновите до 36
         targetSdk = 36
 
         versionCode = 1
@@ -21,7 +19,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-
     buildFeatures {
         viewBinding = true
     }
@@ -29,6 +26,14 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // ИСПРАВЛЕНИЕ: Блок для разрешения конфликтов ресурсов библиотек почты
+    packaging {
+        resources {
+            excludes += "/META-INF/NOTICE.md"
+            excludes += "/META-INF/LICENSE.md"
+        }
     }
 }
 
@@ -42,7 +47,14 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
 
-    // Календарь ProlificInteractive УДАЛЕН. Используем встроенный.
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.11.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+
+    // Библиотеки для отправки почты
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

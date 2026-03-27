@@ -48,5 +48,8 @@ public final class TimeUtils {
     public static long plusMonthsFromTodayEpochDay(int months) {
         return LocalDate.now(ZoneId.systemDefault()).plusMonths(months).toEpochDay();
     }
-}
 
+    public static long epochDayToMillis(long epochDay) {
+        return LocalDate.ofEpochDay(epochDay).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+}

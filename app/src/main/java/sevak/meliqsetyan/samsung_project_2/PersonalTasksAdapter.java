@@ -15,7 +15,7 @@ import sevak.meliqsetyan.samsung_project_2.util.TimeUtils;
 public class PersonalTasksAdapter extends ListAdapter<PersonalTaskEntity, PersonalTasksAdapter.VH> {
 
     public interface Listener {
-        void onTaskLongPress(PersonalTaskEntity task);
+        void onDeleteClick(PersonalTaskEntity task);
     }
 
     private final Listener listener;
@@ -48,9 +48,11 @@ public class PersonalTasksAdapter extends ListAdapter<PersonalTaskEntity, Person
         void bind(PersonalTaskEntity task, Listener listener) {
             binding.time.setText(TimeUtils.formatTimeMinutes(task.timeMinutes));
             binding.title.setText(task.title);
-            binding.getRoot().setOnLongClickListener(v -> {
-                listener.onTaskLongPress(task);
-                return true;
+            
+            binding.btnDelete.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onDeleteClick(task);
+                }
             });
         }
     }
@@ -70,4 +72,3 @@ public class PersonalTasksAdapter extends ListAdapter<PersonalTaskEntity, Person
         }
     };
 }
-

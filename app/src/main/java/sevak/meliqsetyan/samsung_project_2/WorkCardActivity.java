@@ -2,6 +2,7 @@ package sevak.meliqsetyan.samsung_project_2;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -63,6 +64,10 @@ public class WorkCardActivity extends AppCompatActivity {
         binding.toolbar.setNavigationOnClickListener(v -> finish());
 
         slotsAdapter = new WorkSlotsAdapter(slot -> {
+            if (selectedEpochDay < TimeUtils.todayEpochDay()) {
+                Toast.makeText(this, "Нельзя редактировать записи в прошедших днях", Toast.LENGTH_SHORT).show();
+                return;
+            }
             EditWorkSlotDialog.show(
                     getSupportFragmentManager(),
                     TimeUtils.formatTimeMinutes(slot.startMinutes),
@@ -107,13 +112,13 @@ public class WorkCardActivity extends AppCompatActivity {
     }
 
     private void setupCalendar() {
-        // Устанавливаем текущую дату
         selectedEpochDay = TimeUtils.todayEpochDay();
         binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
 
-        // Настройка стандартного CalendarView
+        // Ограничиваем выбор в календаре (визуально)
+        binding.calendarView.setMinDate(System.currentTimeMillis() - 1000);
+
         binding.calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            // В стандартном CalendarView месяцы начинаются с 0
             selectedEpochDay = LocalDate.of(year, month + 1, dayOfMonth).toEpochDay();
             binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
             observeSelectedDayBookings();
