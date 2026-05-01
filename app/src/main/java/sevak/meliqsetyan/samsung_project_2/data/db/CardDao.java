@@ -25,6 +25,12 @@ public interface CardDao {
     @Query("SELECT * FROM cards WHERE type = :type AND isSelf = 1 ORDER BY createdAtEpochMs DESC LIMIT 1")
     CardEntity getSelfByTypeSync(String type);
 
+    @Query("SELECT * FROM cards WHERE type = 'WORK' AND isSelf = 1 LIMIT 1")
+    CardEntity getSelfWorkCard();
+
+    @Query("SELECT * FROM cards WHERE isSelf = 0 ORDER BY createdAtEpochMs DESC")
+    List<CardEntity> getOtherCards();
+
     @Insert
     long insert(CardEntity entity);
 

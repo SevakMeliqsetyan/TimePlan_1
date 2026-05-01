@@ -19,7 +19,7 @@ import sevak.meliqsetyan.samsung_project_2.util.TimeUtils;
 public class AddPersonalTaskDialog extends DialogFragment {
 
     public interface Listener {
-        void onCreate(int timeMinutes, String title);
+        void onCreate(int timeMinutes, String title, int reminderBeforeMinutes);
     }
 
     private static Listener staticListener;
@@ -54,9 +54,15 @@ public class AddPersonalTaskDialog extends DialogFragment {
                 .setView(binding.getRoot())
                 .setPositiveButton(R.string.personal_add_task_button, (dialog, which) -> {
                     String title = binding.titleInput.getText() != null ? binding.titleInput.getText().toString().trim() : "";
+                    String reminderStr = binding.reminderInput.getText() != null ? binding.reminderInput.getText().toString().trim() : "0";
+                    int reminder = 0;
+                    try {
+                        reminder = Integer.parseInt(reminderStr);
+                    } catch (NumberFormatException ignored) {}
+
                     if (TextUtils.isEmpty(title)) return;
                     if (staticListener != null) {
-                        staticListener.onCreate(selectedTimeMinutes, title);
+                        staticListener.onCreate(selectedTimeMinutes, title, reminder);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)

@@ -18,12 +18,14 @@ public class PersonalTaskEntity {
     public long dateEpochDay; // LocalDate.toEpochDay()
     public int timeMinutes; // minutes from 00:00
     public String title;
+    public int reminderBeforeMinutes; // minutes before task time to show notification
 
-    public PersonalTaskEntity(long cardId, long dateEpochDay, int timeMinutes, String title) {
+    public PersonalTaskEntity(long cardId, long dateEpochDay, int timeMinutes, String title, int reminderBeforeMinutes) {
         this.cardId = cardId;
         this.dateEpochDay = dateEpochDay;
         this.timeMinutes = timeMinutes;
         this.title = title;
+        this.reminderBeforeMinutes = reminderBeforeMinutes;
     }
 }
 

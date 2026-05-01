@@ -26,6 +26,16 @@ public class CardsAdapter extends ListAdapter<CardEntity, CardsAdapter.VH> {
         this.listener = listener;
     }
 
+    public CardsAdapter(java.util.List<CardEntity> initialList, Listener listener) {
+        super(DIFF);
+        this.listener = listener;
+        submitList(initialList);
+    }
+
+    public void updateCards(java.util.List<CardEntity> newList) {
+        submitList(newList);
+    }
+
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

@@ -136,10 +136,10 @@ public class PersonalCardActivity extends AppCompatActivity {
     }
 
     private void showAddTaskDialog() {
-        AddPersonalTaskDialog.show(getSupportFragmentManager(), (timeMinutes, title) -> {
+        AddPersonalTaskDialog.show(getSupportFragmentManager(), (timeMinutes, title, reminderBeforeMinutes) -> {
             if (TextUtils.isEmpty(title)) return;
             DbProvider.io().execute(() -> {
-                PersonalTaskEntity task = new PersonalTaskEntity(cardId, selectedEpochDay, timeMinutes, title);
+                PersonalTaskEntity task = new PersonalTaskEntity(cardId, selectedEpochDay, timeMinutes, title, reminderBeforeMinutes);
                 long id = DbProvider.db(this).personalTaskDao().insert(task);
                 task.id = id;
                 scheduleNotification(task);
@@ -173,13 +173,13 @@ public class PersonalCardActivity extends AppCompatActivity {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
-        long notifyTime = cal.getTimeInMillis() - (30 * 60 * 1000);
+        long notifyTime = cal.getTimeInMillis() - ((long) task.reminderBeforeMinutes * 60 * 1000);
 
-        // Debug: if time is within 30 mins, we can't schedule it in the past. 
+        // Debug: if time is within reminder period, we can't schedule it in the past. 
         // But for testing purposes, if you want it to fire now if it's too close, you'd change this.
         if (notifyTime <= System.currentTimeMillis()) {
-            // If the task is more than 30 mins away, this shouldn't happen.
-            // If it's less than 30 mins away, notifyTime will be in the past.
+            // If the task is more than reminderBeforeMinutes away, this shouldn't happen.
+            // If it's less, notifyTime will be in the past.
             return;
         }
 

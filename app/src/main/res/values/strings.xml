@@ -30,6 +30,10 @@
     <string name="empty_tasks">No tasks for this day</string>
     <string name="add_task_hint">Task Description</string>
     <string name="btn_add">Add</string>
+    <string name="no_tasks_message">No tasks for this day</string>
+    <string name="select_time">Select Time</string>
+    <string name="remind_before">Remind before (minutes)</string>
+    <string name="delete_task_title">Delete task?</string>
 
     <!-- Work Card Section -->
     <string name="work_card_title">Work Calendar</string>
@@ -38,13 +42,20 @@
     <string name="work_surname">Last Name</string>
     <string name="work_age">Age</string>
     <string name="work_profession">Profession</string>
-    <string name="work_session_length">Session Length</string>
-    <string name="work_time_start">Start Time</string>
-    <string name="work_time_end">End Time</string>
-    <string name="work_break_start">Break From (optional)</string>
-    <string name="work_break_end">Break To (optional)</string>
-    <string name="work_days_title">Work Days</string>
+    <string name="work_session_length">Session Duration</string>
+    <string name="work_time_start">Work Start</string>
+    <string name="work_time_end">Work End</string>
+    <string name="work_break_start">Break Start (optional)</string>
+    <string name="work_break_end">Break End (optional)</string>
+    <string name="work_days_title">Working Days</string>
     <string name="btn_save_profile">Save Profile</string>
+    <string name="work_age_label">Age: %1$s</string>
+    <string name="experience_title">Experience &amp; Skills</string>
+    <string name="add_experience">Add Experience</string>
+    <string name="experience_label_hint">Label (e.g. Work Experience)</string>
+    <string name="experience_value_hint">Value (e.g. 5 years)</string>
+    <string name="delete_record_title">Delete Record?</string>
+    <string name="delete_record_message">Are you sure you want to delete \"%1$s\"?</string>
 
     <!-- Work Slots -->
     <string name="work_schedule_title">Daily Schedule</string>
@@ -55,10 +66,17 @@
     <string name="work_day_hint_working">Working Schedule</string>
     <string name="work_day_hint_off">Day Off</string>
     <string name="client_name_hint">Client Name</string>
+    <string name="slot_title_format">Slot %1$s</string>
+    <string name="slot_edit_hint">Press save to book the time</string>
 
     <!-- Connections Section -->
     <string name="connections_title">Connections</string>
     <string name="connections_subtitle">Other people\'s cards will appear here</string>
+    <string name="btn_my_qr">My QR</string>
+    <string name="btn_scan_qr">Scan QR</string>
+    <string name="qr_dialog_title">Your Card QR</string>
+    <string name="qr_scan_success">Card added!</string>
+    <string name="qr_scan_error">Invalid QR Code</string>
 
     <!-- Setup Profile Screen -->
     <string name="setup_title">Welcome</string>
@@ -73,6 +91,12 @@
     <string name="card_type_work">Work</string>
     <string name="card_name_hint">Card Name (e.g. My Schedule)</string>
     <string name="btn_create">Create</string>
+    <string name="card_type_personal_desc">Calendar + daily tasks</string>
+    <string name="card_type_work_desc">Profile + client schedule by slots</string>
+    <string name="card_name_label">Card Name</string>
+    <string name="card_name_example">e.g. My Plan</string>
+    <string name="enter_name_error">Enter name</string>
+    <string name="choose_card_type">Choose card type</string>
 
     <!-- Week Days (Short) -->
     <string name="day_mon">Mon</string>
@@ -87,4 +111,23 @@
     <string name="dialog_cancel">Cancel</string>
     <string name="dialog_save">Save</string>
     <string name="dialog_delete">Delete</string>
+    <string name="dialog_add">Add</string>
+    <string name="clear">Clear</string>
+
+    <!-- Feedback -->
+    <string name="login_success">Login successful</string>
+    <string name="register_success">Registration successful</string>
+    <string name="fill_all_fields">Please fill all fields</string>
+    <string name="error_prefix">Error: %1$s</string>
+    <string name="past_day_edit_error">Cannot edit entries in past days</string>
+    <string name="notification_permission_toast">Allow notifications in settings to receive reminders</string>
+    <string name="action_my_card">My Card</string>
+    <string name="action_settings">Settings</string>
+    <string name="language_settings">Language</string>
+    <string name="theme_settings">Theme</string>
+    <string name="app_settings">App Settings</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ru">Русский</string>
 </resources>

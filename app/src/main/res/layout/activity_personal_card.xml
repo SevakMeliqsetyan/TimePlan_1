@@ -13,9 +13,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/text_primary"
+        app:titleTextColor="?attr/colorOnSurface"
         app:navigationIcon="@drawable/ic_back"
-        app:navigationIconTint="@color/text_primary"
+        app:navigationIconTint="?attr/colorOnSurface"
         tools:title="Личный календарь" />
 
     <!-- Контейнер для календаря -->
@@ -24,9 +24,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:cardBackgroundColor="@color/surface_dark"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
         app:cardCornerRadius="20dp"
-        app:strokeColor="@color/divider_dark"
+        app:strokeColor="?attr/colorOutlineVariant"
         app:strokeWidth="1dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -36,8 +36,7 @@
             android:id="@+id/calendarView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:theme="@style/ThemeOverlay.Material3.Dark" />
+            android:padding="8dp" />
 
     </com.google.android.material.card.MaterialCardView>
 
@@ -50,7 +49,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="8dp"
         android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/colorOnSurface"
         app:layout_constraintEnd_toStartOf="@id/btn_add_task"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/calendar_card"
@@ -65,8 +64,8 @@
         app:icon="@drawable/ic_add"
         app:iconGravity="textStart"
         app:iconPadding="0dp"
-        app:backgroundTint="@color/teal_accent"
-        app:iconTint="@color/background_dark"
+        app:backgroundTint="?attr/colorPrimary"
+        app:iconTint="?attr/colorOnPrimary"
         app:layout_constraintBottom_toBottomOf="@id/selected_day_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/selected_day_title" />
@@ -78,9 +77,9 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:layout_marginTop="6dp"
-        android:text="Задач на этот день нет"
+        android:text="@string/empty_tasks"
         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/selected_day_title" />

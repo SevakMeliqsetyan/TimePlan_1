@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "sevak.meliqsetyan.samsung_project_timeplan"
-        minSdk = 26
+        minSdk = 23
         targetSdk = 36
 
         versionCode = 1
@@ -55,6 +55,11 @@ dependencies {
     // Библиотеки для отправки почты
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")
+
+    // QR Code
+    implementation(libs.zxing.core)
+    implementation(libs.zxing.android)
+    implementation(libs.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/title"
@@ -11,22 +12,66 @@
         android:layout_height="wrap_content"
         android:text="@string/connections_title"
         android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/colorOnSurface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/buttons_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/title">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_my_qr"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_my_qr"
+            app:icon="@drawable/ic_settings" /> <!-- TODO: Replace with QR icon if available -->
+
+        <Space
+            android:layout_width="12dp"
+            android:layout_height="wrap_content" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_scan_qr"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/btn_scan_qr"
+            app:icon="@drawable/ic_person" /> <!-- TODO: Replace with Scan icon if available -->
+
+    </LinearLayout>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/subtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="24dp"
         android:text="@string/connections_subtitle"
-        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-        android:textColor="@color/text_secondary"
+        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+        android:textColor="?attr/colorOnSurface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
+        app:layout_constraintTop_toBottomOf="@id/buttons_container" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/connections_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/subtitle"
+        tools:listitem="@layout/item_work_slot" /> <!-- Temporary tools listitem -->
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

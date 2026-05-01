@@ -4,13 +4,20 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
-
-        <!-- Исправлено: добавлено tools:targetApi="o_mr1" (API 27) -->
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
 
         <item name="colorPrimary">@color/teal_accent</item>
         <item name="colorSecondary">@color/purple_accent</item>
         <item name="colorSurface">@color/surface_dark</item>
         <item name="android:colorBackground">@color/background_dark</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorOutlineVariant">@color/divider_dark</item>
+
+        <!-- Calendar colors -->
+        <item name="android:dateTextAppearance">@style/CalendarDateText</item>
+        <item name="android:weekDayTextAppearance">@style/CalendarWeekText</item>
+
+        <item name="colorSurfaceVariant">@color/surface_elevated_dark</item>
     </style>
 </resources>

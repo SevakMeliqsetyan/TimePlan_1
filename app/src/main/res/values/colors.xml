@@ -17,6 +17,17 @@
     <color name="text_secondary">#B3FFFFFF</color>
     <color name="divider_dark">#26FFFFFF</color>
 
+    <!-- Modern Light theme palette -->
+    <color name="modern_light_bg">#FFF0F4FF</color>
+    <color name="modern_light_card">#FFFFFFFF</color>
+    <color name="modern_light_accent">#FF5C7CFA</color>
+    <color name="modern_light_text">#FF2C2E33</color>
+    <color name="modern_light_text_secondary">#FF868E96</color>
+    <color name="modern_light_divider">#FFDEE2E6</color>
+    <color name="modern_light_surface_variant">#FFF1F3F5</color>
+    <color name="modern_light_gradient_start">#FFFFFFFF</color>
+    <color name="modern_light_gradient_end">#FFF0F4FF</color>
+
     <!-- Slot colors -->
     <color name="slot_free_background">#3314B8A6</color>
     <color name="slot_busy_background">#FF14B8A6</color>

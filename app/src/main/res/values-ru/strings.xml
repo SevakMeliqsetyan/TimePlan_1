@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App Name -->
+    <string name="app_name">TimePlan</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_personal">Личное</string>
+    <string name="nav_work">Работа</string>
+    <string name="nav_connections">Связи</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Планирование</string>
+    <string name="home_subtitle">Создавайте личные и рабочие расписания</string>
+    <string name="home_empty_title">Карт пока нет</string>
+    <string name="home_empty_subtitle">Нажмите плюс, чтобы создать первую карту</string>
+    <string name="home_add_card">Новая карта</string>
+    <string name="home_add_personal">Личная карта</string>
+    <string name="home_add_work">Рабочая карта</string>
+    <string name="empty_cards_message">У вас пока нет карт.\nДобавьте первую!</string>
+    <string name="add_card">Добавить карту</string>
+
+    <!-- Personal Card Section -->
+    <string name="personal_card_title">Личный календарь</string>
+    <string name="personal_tasks_title">Задачи на день</string>
+    <string name="personal_add_task">Добавить задачу</string>
+    <string name="personal_task_time_hint">Время</string>
+    <string name="personal_task_title_hint">Что сделать</string>
+    <string name="personal_add_task_button">Сохранить</string>
+    <string name="empty_tasks">Нет задач на этот день</string>
+    <string name="add_task_hint">Описание задачи</string>
+    <string name="btn_add">Добавить</string>
+    <string name="no_tasks_message">Нет задач на этот день</string>
+    <string name="select_time">Выбрать время</string>
+    <string name="remind_before">Напомнить за (минут)</string>
+    <string name="delete_task_title">Удалить задачу?</string>
+
+    <!-- Work Card Section -->
+    <string name="work_card_title">Рабочий календарь</string>
+    <string name="work_profile_title">Рабочий профиль</string>
+    <string name="work_name">Имя</string>
+    <string name="work_surname">Фамилия</string>
+    <string name="work_age">Возраст</string>
+    <string name="work_profession">Профессия</string>
+    <string name="work_session_length">Длительность сессии</string>
+    <string name="work_time_start">Начало работы</string>
+    <string name="work_time_end">Конец работы</string>
+    <string name="work_break_start">Начало перерыва (опц.)</string>
+    <string name="work_break_end">Конец перерыва (опц.)</string>
+    <string name="work_days_title">Рабочие дни</string>
+    <string name="btn_save_profile">Сохранить профиль</string>
+    <string name="work_age_label">Возраст: %1$s</string>
+    <string name="experience_title">Опыт и навыки</string>
+    <string name="add_experience">Добавить опыт</string>
+    <string name="experience_label_hint">Заголовок (напр. Опыт работы)</string>
+    <string name="experience_value_hint">Значение (напр. 5 лет)</string>
+    <string name="delete_record_title">Удалить запись?</string>
+    <string name="delete_record_message">Вы уверены, что хотите удалить \"%1$s\"?</string>
+
+    <!-- Work Slots -->
+    <string name="work_schedule_title">Расписание на день</string>
+    <string name="work_slot_free">Свободно</string>
+    <string name="work_slot_busy">Занято</string>
+    <string name="work_slot_client_hint">Имя клиента</string>
+    <string name="work_slot_save">Сохранить</string>
+    <string name="work_day_hint_working">Рабочее расписание</string>
+    <string name="work_day_hint_off">Выходной</string>
+    <string name="client_name_hint">Имя клиента</string>
+    <string name="slot_title_format">Слот %1$s</string>
+    <string name="slot_edit_hint">Нажмите сохранить, чтобы забронировать время</string>
+
+    <!-- Connections Section -->
+    <string name="connections_title">Связи</string>
+    <string name="connections_subtitle">Здесь будут отображаться карты других людей</string>
+    <string name="btn_my_qr">Мой QR</string>
+    <string name="btn_scan_qr">Сканировать</string>
+    <string name="qr_dialog_title">QR-код вашей карты</string>
+    <string name="qr_scan_success">Карта добавлена!</string>
+    <string name="qr_scan_error">Неверный QR-код</string>
+
+    <!-- Setup Profile Screen -->
+    <string name="setup_title">Добро пожаловать</string>
+    <string name="setup_subtitle">Введите ваше имя один раз. Мы будем использовать его в ваших картах.</string>
+    <string name="setup_first_name">Имя</string>
+    <string name="setup_last_name">Фамилия</string>
+    <string name="setup_continue">Продолжить</string>
+
+    <!-- Add Card Bottom Sheet -->
+    <string name="add_card_title">Новая карта</string>
+    <string name="card_type_personal">Личная</string>
+    <string name="card_type_work">Рабочая</string>
+    <string name="card_name_hint">Название карты (напр. Мое расписание)</string>
+    <string name="btn_create">Создать</string>
+    <string name="card_type_personal_desc">Календарь + задачи на день</string>
+    <string name="card_type_work_desc">Профиль + расписание по слотам</string>
+    <string name="card_name_label">Название карты</string>
+    <string name="card_name_example">напр. Мой план</string>
+    <string name="enter_name_error">Введите название</string>
+    <string name="choose_card_type">Выберите тип карты</string>
+
+    <!-- Week Days (Short) -->
+    <string name="day_mon">Пн</string>
+    <string name="day_tue">Вт</string>
+    <string name="day_wed">Ср</string>
+    <string name="day_thu">Чт</string>
+    <string name="day_fri">Пт</string>
+    <string name="day_sat">Сб</string>
+    <string name="day_sun">Вс</string>
+
+    <!-- Dialog Actions -->
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_save">Сохранить</string>
+    <string name="dialog_delete">Удалить</string>
+    <string name="dialog_add">Добавить</string>
+    <string name="clear">Очистить</string>
+
+    <!-- Feedback -->
+    <string name="login_success">Вход выполнен</string>
+    <string name="register_success">Регистрация прошла успешно</string>
+    <string name="fill_all_fields">Пожалуйста, заполните все поля</string>
+    <string name="error_prefix">Ошибка: %1$s</string>
+    <string name="past_day_edit_error">Нельзя редактировать записи в прошедших днях</string>
+    <string name="notification_permission_toast">Разрешите уведомления в настройках для получения напоминаний</string>
+    <string name="action_my_card">Моя карта</string>
+    <string name="action_settings">Настройки</string>
+    <string name="language_settings">Язык</string>
+    <string name="theme_settings">Тема</string>
+    <string name="app_settings">Настройки приложения</string>
+    <string name="theme_dark">Темная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ru">Русский</string>
+</resources>

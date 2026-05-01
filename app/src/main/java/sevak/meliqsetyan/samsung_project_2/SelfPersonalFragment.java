@@ -1,5 +1,10 @@
 package sevak.meliqsetyan.samsung_project_2;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -20,6 +25,8 @@ import sevak.meliqsetyan.samsung_project_2.data.db.DbProvider;
 import sevak.meliqsetyan.samsung_project_2.data.db.PersonalTaskEntity;
 import sevak.meliqsetyan.samsung_project_2.databinding.ActivityPersonalCardBinding;
 import sevak.meliqsetyan.samsung_project_2.util.TimeUtils;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class SelfPersonalFragment extends Fragment {
 
@@ -42,9 +49,19 @@ public class SelfPersonalFragment extends Fragment {
 
         binding.toolbar.setNavigationIcon(null);
 
-        tasksAdapter = new PersonalTasksAdapter(task -> DbProvider.io().execute(() -> {
-            DbProvider.db(requireContext()).personalTaskDao().deleteById(task.id);
-        }));
+        tasksAdapter = new PersonalTasksAdapter(task -> {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.delete_task_title)
+                    .setMessage(getString(R.string.delete_record_message, task.title))
+                    .setPositiveButton(R.string.dialog_delete, (dialog, which) -> {
+                        DbProvider.io().execute(() -> {
+                            DbProvider.db(requireContext()).personalTaskDao().deleteById(task.id);
+                            cancelNotification(task.id);
+                        });
+                    })
+                    .setNegativeButton(R.string.dialog_cancel, null)
+                    .show();
+        });
 
         binding.tasksList.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.tasksList.setAdapter(tasksAdapter);
@@ -91,12 +108,65 @@ public class SelfPersonalFragment extends Fragment {
 
     private void showAddTaskDialog() {
         if (cardId <= 0) return;
-        AddPersonalTaskDialog.show(getParentFragmentManager(), (timeMinutes, title) -> {
+        AddPersonalTaskDialog.show(getParentFragmentManager(), (timeMinutes, title, reminderBeforeMinutes) -> {
             if (TextUtils.isEmpty(title)) return;
-            DbProvider.io().execute(() -> DbProvider.db(requireContext()).personalTaskDao().insert(
-                    new PersonalTaskEntity(cardId, selectedEpochDay, timeMinutes, title)
-            ));
+            DbProvider.io().execute(() -> {
+                long id = DbProvider.db(requireContext()).personalTaskDao().insert(
+                        new PersonalTaskEntity(cardId, selectedEpochDay, timeMinutes, title, reminderBeforeMinutes)
+                );
+                // Schedule notification here
+                scheduleNotification(id, selectedEpochDay, timeMinutes, title, reminderBeforeMinutes);
+            });
         });
+    }
+
+    private void scheduleNotification(long taskId, long epochDay, int timeMinutes, String title, int reminderBeforeMinutes) {
+        if (reminderBeforeMinutes < 0) return;
+
+        long triggerAtMillis = TimeUtils.epochDayToMillis(epochDay) + (timeMinutes * 60000L) - (reminderBeforeMinutes * 60000L);
+        
+        // Don't schedule if time is in the past
+        if (triggerAtMillis < System.currentTimeMillis()) return;
+
+        Context context = requireContext();
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        
+        Intent intent = new Intent(context, TaskNotificationReceiver.class);
+        intent.putExtra(TaskNotificationReceiver.EXTRA_TASK_TITLE, title);
+        
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 
+                (int) taskId, 
+                intent, 
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        if (alarmManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent);
+            }
+        }
+    }
+
+    private void cancelNotification(long taskId) {
+        Context context = getContext();
+        if (context == null) return;
+        
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(context, TaskNotificationReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context, 
+                (int) taskId, 
+                intent, 
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_NO_CREATE
+        );
+
+        if (pendingIntent != null && alarmManager != null) {
+            alarmManager.cancel(pendingIntent);
+            pendingIntent.cancel();
+        }
     }
 
     @Override

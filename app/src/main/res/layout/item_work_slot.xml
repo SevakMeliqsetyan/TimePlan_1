@@ -8,8 +8,8 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
-    app:cardBackgroundColor="@color/surface_dark"
-    app:strokeColor="@color/divider_dark"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:strokeColor="?attr/colorOutlineVariant"
     app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/colorOnSurfaceVariant"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="09:00 - 10:00" />
@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/colorOnSurface"
             app:layout_constraintTop_toBottomOf="@id/slotTime"
             tools:text="Свободно" />
 

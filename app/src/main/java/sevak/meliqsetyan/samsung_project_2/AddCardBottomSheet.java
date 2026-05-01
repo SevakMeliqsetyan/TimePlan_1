@@ -51,7 +51,7 @@ public class AddCardBottomSheet extends BottomSheetDialogFragment {
         binding.btnCreate.setOnClickListener(v -> {
             String title = binding.titleInput.getText() != null ? binding.titleInput.getText().toString().trim() : "";
             if (TextUtils.isEmpty(title)) {
-                binding.titleInputLayout.setError("Введите название");
+                binding.titleInputLayout.setError(getString(R.string.enter_name_error));
                 return;
             }
             binding.titleInputLayout.setError(null);

@@ -7,25 +7,24 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_main_gradient">
 
-    <FrameLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:background="@android:color/transparent"
         app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:titleTextColor="@color/text_primary"
+            android:titleTextColor="?attr/colorOnSurface"
+            app:menu="@menu/menu_work_profile"
             app:navigationIcon="@drawable/ic_back"
-            app:navigationIconTint="@color/text_primary"
-            tools:title="@string/work_card_title" />
+            app:navigationIconTint="?attr/colorOnSurface"
+            tools:title="Имя Фамилия" />
 
-    </FrameLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scroll"
@@ -46,60 +45,72 @@
             android:paddingRight="16dp"
             android:paddingBottom="100dp"> <!-- Увеличен отступ снизу -->
 
-            <!-- Календарь -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/calendar_card"
+            <!-- Календарь и график (скрыты по умолчанию) -->
+            <LinearLayout
+                android:id="@+id/schedule_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface_dark"
-                app:cardCornerRadius="20dp"
-                app:strokeColor="@color/divider_dark"
-                app:strokeWidth="1dp">
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-                <CalendarView
-                    android:id="@+id/calendarView"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/calendar_card"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                    app:cardCornerRadius="20dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
 
-            </com.google.android.material.card.MaterialCardView>
+                    <CalendarView
+                        android:id="@+id/calendarView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/selected_day_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                android:textColor="@color/text_primary"
-                tools:text="06 марта 2026" />
+                </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/day_hint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="@string/work_schedule_title"
-                android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                android:textColor="@color/text_secondary" />
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/selected_day_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:textColor="?attr/colorOnSurface"
+                    tools:text="06 марта 2026" />
 
-            <!-- Список слотов -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/slots_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:nestedScrollingEnabled="false"
-                android:clipToPadding="false"
-                tools:listitem="@layout/item_work_slot" />
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/day_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/work_schedule_title"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <!-- Список слотов -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/slots_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:nestedScrollingEnabled="false"
+                    android:clipToPadding="false"
+                    tools:listitem="@layout/item_work_slot" />
+
+            </LinearLayout>
 
             <!-- Профиль -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/profile_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                app:cardBackgroundColor="@color/surface_dark"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="20dp"
-                app:strokeColor="@color/divider_dark"
-                app:strokeWidth="1dp">
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp"
+                tools:visibility="visible">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -112,12 +123,61 @@
                         android:layout_height="wrap_content"
                         android:text="@string/work_profile_title"
                         android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <!-- App Settings Section -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/app_settings"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                        android:textColor="?attr/colorPrimary" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="8dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_change_lang"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/language_settings"
+                            app:icon="@drawable/ic_settings"
+                            app:backgroundTint="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorPrimary" />
+
+                        <Space
+                            android:layout_width="8dp"
+                            android:layout_height="wrap_content" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_change_theme"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/theme_settings"
+                            app:icon="@drawable/ic_person"
+                            app:backgroundTint="?attr/colorSurfaceVariant"
+                            android:textColor="?attr/colorPrimary" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="?attr/colorOutlineVariant" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
                         <com.google.android.material.textfield.TextInputLayout
@@ -125,7 +185,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/surface_elevated_dark"
+                            app:boxBackgroundColor="?attr/colorSurfaceVariant"
                             app:boxCornerRadiusBottomEnd="16dp"
                             app:boxCornerRadiusBottomStart="16dp"
                             app:boxCornerRadiusTopEnd="16dp"
@@ -137,8 +197,8 @@
                                 android:layout_height="wrap_content"
                                 android:hint="@string/work_name"
                                 android:inputType="textPersonName"
-                                android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary" />
+                                android:textColor="?attr/colorOnSurface"
+                                android:textColorHint="?attr/colorOnSurfaceVariant" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <Space
@@ -150,7 +210,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/surface_elevated_dark"
+                            app:boxBackgroundColor="?attr/colorSurfaceVariant"
                             app:boxCornerRadiusBottomEnd="16dp"
                             app:boxCornerRadiusBottomStart="16dp"
                             app:boxCornerRadiusTopEnd="16dp"
@@ -162,8 +222,8 @@
                                 android:layout_height="wrap_content"
                                 android:hint="@string/work_surname"
                                 android:inputType="textPersonName"
-                                android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary" />
+                                android:textColor="?attr/colorOnSurface"
+                                android:textColorHint="?attr/colorOnSurfaceVariant" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
@@ -179,7 +239,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/surface_elevated_dark"
+                            app:boxBackgroundColor="?attr/colorSurfaceVariant"
                             app:boxCornerRadiusBottomEnd="16dp"
                             app:boxCornerRadiusBottomStart="16dp"
                             app:boxCornerRadiusTopEnd="16dp"
@@ -191,8 +251,8 @@
                                 android:layout_height="wrap_content"
                                 android:hint="@string/work_age"
                                 android:inputType="number"
-                                android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary" />
+                                android:textColor="?attr/colorOnSurface"
+                                android:textColorHint="?attr/colorOnSurfaceVariant" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <Space
@@ -204,7 +264,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             app:boxBackgroundMode="filled"
-                            app:boxBackgroundColor="@color/surface_elevated_dark"
+                            app:boxBackgroundColor="?attr/colorSurfaceVariant"
                             app:boxCornerRadiusBottomEnd="16dp"
                             app:boxCornerRadiusBottomStart="16dp"
                             app:boxCornerRadiusTopEnd="16dp"
@@ -216,8 +276,8 @@
                                 android:layout_height="wrap_content"
                                 android:hint="@string/work_profession"
                                 android:inputType="textCapWords"
-                                android:textColor="@color/text_primary"
-                                android:textColorHint="@color/text_secondary" />
+                                android:textColor="?attr/colorOnSurface"
+                                android:textColorHint="?attr/colorOnSurfaceVariant" />
                         </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
@@ -227,7 +287,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         app:boxBackgroundMode="filled"
-                        app:boxBackgroundColor="@color/surface_elevated_dark"
+                        app:boxBackgroundColor="?attr/colorSurfaceVariant"
                         app:boxCornerRadiusBottomEnd="16dp"
                         app:boxCornerRadiusBottomStart="16dp"
                         app:boxCornerRadiusTopEnd="16dp"
@@ -240,8 +300,8 @@
                             android:layout_height="wrap_content"
                             android:hint="@string/work_session_length"
                             android:inputType="number"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Work time range -->
@@ -251,7 +311,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         app:boxBackgroundMode="filled"
-                        app:boxBackgroundColor="@color/surface_elevated_dark"
+                        app:boxBackgroundColor="?attr/colorSurfaceVariant"
                         app:boxCornerRadiusBottomEnd="16dp"
                         app:boxCornerRadiusBottomStart="16dp"
                         app:boxCornerRadiusTopEnd="16dp"
@@ -263,8 +323,8 @@
                             android:layout_height="wrap_content"
                             android:hint="@string/work_time_start"
                             android:inputType="time"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -273,7 +333,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         app:boxBackgroundMode="filled"
-                        app:boxBackgroundColor="@color/surface_elevated_dark"
+                        app:boxBackgroundColor="?attr/colorSurfaceVariant"
                         app:boxCornerRadiusBottomEnd="16dp"
                         app:boxCornerRadiusBottomStart="16dp"
                         app:boxCornerRadiusTopEnd="16dp"
@@ -285,8 +345,8 @@
                             android:layout_height="wrap_content"
                             android:hint="@string/work_time_end"
                             android:inputType="time"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -295,7 +355,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         app:boxBackgroundMode="filled"
-                        app:boxBackgroundColor="@color/surface_elevated_dark"
+                        app:boxBackgroundColor="?attr/colorSurfaceVariant"
                         app:boxCornerRadiusBottomEnd="16dp"
                         app:boxCornerRadiusBottomStart="16dp"
                         app:boxCornerRadiusTopEnd="16dp"
@@ -307,8 +367,8 @@
                             android:layout_height="wrap_content"
                             android:hint="@string/work_break_start"
                             android:inputType="time"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -317,7 +377,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         app:boxBackgroundMode="filled"
-                        app:boxBackgroundColor="@color/surface_elevated_dark"
+                        app:boxBackgroundColor="?attr/colorSurfaceVariant"
                         app:boxCornerRadiusBottomEnd="16dp"
                         app:boxCornerRadiusBottomStart="16dp"
                         app:boxCornerRadiusTopEnd="16dp"
@@ -329,8 +389,8 @@
                             android:layout_height="wrap_content"
                             android:hint="@string/work_break_end"
                             android:inputType="time"
-                            android:textColor="@color/text_primary"
-                            android:textColorHint="@color/text_secondary" />
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textview.MaterialTextView
@@ -339,7 +399,7 @@
                         android:layout_marginTop="12dp"
                         android:text="@string/work_days_title"
                         android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
                     <com.google.android.material.chip.ChipGroup
                         android:id="@+id/chips_days"
@@ -356,7 +416,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Пн" />
+                            android:text="@string/day_mon" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_tue"
@@ -364,7 +424,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Вт" />
+                            android:text="@string/day_tue" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_wed"
@@ -372,7 +432,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Ср" />
+                            android:text="@string/day_wed" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_thu"
@@ -380,7 +440,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Чт" />
+                            android:text="@string/day_thu" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_fri"
@@ -388,7 +448,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Пт" />
+                            android:text="@string/day_fri" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_sat"
@@ -396,7 +456,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Сб" />
+                            android:text="@string/day_sat" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chip_sun"
@@ -404,7 +464,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="Вс" />
+                            android:text="@string/day_sun" />
 
                     </com.google.android.material.chip.ChipGroup>
 
@@ -413,13 +473,99 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="14dp"
-                        android:text="Сохранить профиль"
+                        android:text="@string/btn_save_profile"
                         app:cornerRadius="16dp"
-                        app:backgroundTint="@color/purple_accent"
-                        android:textColor="@color/text_primary" />
+                        android:padding="12dp"
+                        app:backgroundTint="?attr/colorPrimary"
+                        android:textColor="@android:color/white" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Карточка пользователя (Моя карточка) -->
+            <LinearLayout
+                android:id="@+id/my_card_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="24dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="20dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/card_full_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                            android:textColor="?attr/colorOnSurface"
+                            tools:text="Иван Иванов" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/card_profession"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                            android:textColor="?attr/colorPrimary"
+                            tools:text="Дизайнер" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/card_age"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            tools:text="Возраст: 25" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_marginBottom="16dp"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/experience_title"
+                            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                            android:textColor="?attr/colorOnSurface" />
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/experience_list"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:nestedScrollingEnabled="false" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_add_experience"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/add_experience"
+                            app:icon="@drawable/ic_add" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

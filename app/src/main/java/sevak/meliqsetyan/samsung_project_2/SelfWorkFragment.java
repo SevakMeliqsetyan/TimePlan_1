@@ -24,8 +24,12 @@ import sevak.meliqsetyan.samsung_project_2.data.WorkDays;
 import sevak.meliqsetyan.samsung_project_2.data.db.CardEntity;
 import sevak.meliqsetyan.samsung_project_2.data.db.DbProvider;
 import sevak.meliqsetyan.samsung_project_2.data.db.WorkBookingEntity;
+import sevak.meliqsetyan.samsung_project_2.data.db.WorkExperienceEntity;
 import sevak.meliqsetyan.samsung_project_2.databinding.ActivityWorkCardBinding;
+import sevak.meliqsetyan.samsung_project_2.databinding.DialogAddExperienceBinding;
 import sevak.meliqsetyan.samsung_project_2.util.TimeUtils;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 public class SelfWorkFragment extends Fragment {
 
@@ -42,7 +46,9 @@ public class SelfWorkFragment extends Fragment {
     private Integer breakEndMinutes = null;
 
     private WorkSlotsAdapter slotsAdapter;
+    private WorkExperienceAdapter experienceAdapter;
     private LiveData<List<WorkBookingEntity>> bookingsLiveData;
+    private LiveData<List<WorkExperienceEntity>> experienceLiveData;
 
     // ПЕРЕМЕННЫЕ СЛОЖНОГО КАЛЕНДАРЯ УДАЛЕНЫ
 
@@ -75,12 +81,68 @@ public class SelfWorkFragment extends Fragment {
         binding.slotsList.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.slotsList.setAdapter(slotsAdapter);
 
+        experienceAdapter = new WorkExperienceAdapter(this::showDeleteExperienceConfirmation);
+        binding.experienceList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.experienceList.setAdapter(experienceAdapter);
+
         setupCalendar();
         setupDaysChips();
 
         binding.btnSaveProfile.setOnClickListener(v -> saveProfile());
+        binding.btnAddExperience.setOnClickListener(v -> showAddExperienceDialog());
+
+        binding.btnChangeLang.setOnClickListener(v -> showLanguageDialog());
+        binding.btnChangeTheme.setOnClickListener(v -> showThemeDialog());
+
+        binding.toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_settings) {
+                binding.scheduleContainer.setVisibility(View.GONE);
+                binding.myCardContainer.setVisibility(View.GONE);
+                binding.profileCard.setVisibility(View.VISIBLE);
+                return true;
+            } else if (item.getItemId() == R.id.action_my_card) {
+                binding.scheduleContainer.setVisibility(View.GONE);
+                binding.profileCard.setVisibility(View.GONE);
+                binding.myCardContainer.setVisibility(View.VISIBLE);
+                return true;
+            }
+            return false;
+        });
 
         observeCard();
+    }
+
+    private void showAddExperienceDialog() {
+        DialogAddExperienceBinding dBinding = DialogAddExperienceBinding.inflate(getLayoutInflater());
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.add_experience)
+                .setView(dBinding.getRoot())
+                .setPositiveButton(R.string.dialog_add, (dialog, which) -> {
+                    String label = dBinding.inputLabel.getText().toString().trim();
+                    String value = dBinding.inputValue.getText().toString().trim();
+                    if (!label.isEmpty() && !value.isEmpty()) {
+                        DbProvider.io().execute(() -> {
+                            DbProvider.db(requireContext()).workExperienceDao().insert(
+                                    new WorkExperienceEntity(cardId, label, value)
+                            );
+                        });
+                    }
+                })
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .show();
+    }
+
+    private void showDeleteExperienceConfirmation(WorkExperienceEntity experience) {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.delete_record_title)
+                .setMessage(getString(R.string.delete_record_message, experience.label))
+                .setPositiveButton(R.string.dialog_delete, (dialog, which) -> {
+                    DbProvider.io().execute(() -> {
+                        DbProvider.db(requireContext()).workExperienceDao().deleteById(experience.id);
+                    });
+                })
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .show();
     }
 
     private void setupCalendar() {
@@ -155,7 +217,30 @@ public class SelfWorkFragment extends Fragment {
     private void onCardChanged(CardEntity card) {
         if (card == null) return;
         cardId = card.id;
-        binding.toolbar.setTitle(card.title);
+
+        String displayName = (card.firstName != null ? card.firstName : "") + " " + (card.lastName != null ? card.lastName : "");
+        binding.toolbar.setTitle(displayName.trim());
+
+        // Age Info
+        binding.cardFullName.setText(displayName.trim());
+        binding.cardProfession.setText(card.profession != null ? card.profession : "");
+        binding.cardAge.setText(getString(R.string.work_age_label, (card.age != null ? String.valueOf(card.age) : "—")));
+
+        boolean isProfileComplete = !TextUtils.isEmpty(card.firstName) && !TextUtils.isEmpty(card.lastName) && !TextUtils.isEmpty(card.profession);
+        
+        if (isProfileComplete) {
+            binding.scheduleContainer.setVisibility(View.VISIBLE);
+            binding.profileCard.setVisibility(View.GONE);
+            binding.myCardContainer.setVisibility(View.GONE);
+            binding.toolbar.getMenu().findItem(R.id.action_settings).setVisible(true);
+            binding.toolbar.getMenu().findItem(R.id.action_my_card).setVisible(true);
+        } else {
+            binding.scheduleContainer.setVisibility(View.GONE);
+            binding.profileCard.setVisibility(View.VISIBLE);
+            binding.myCardContainer.setVisibility(View.GONE);
+            binding.toolbar.getMenu().findItem(R.id.action_settings).setVisible(false);
+            binding.toolbar.getMenu().findItem(R.id.action_my_card).setVisible(false);
+        }
 
         boolean firstTime = !profileInitialized;
         if (firstTime) {
@@ -198,15 +283,21 @@ public class SelfWorkFragment extends Fragment {
         if (bookingsLiveData != null) {
             bookingsLiveData.removeObservers(getViewLifecycleOwner());
         }
+        if (experienceLiveData != null) {
+            experienceLiveData.removeObservers(getViewLifecycleOwner());
+        }
+
+        experienceLiveData = DbProvider.db(requireContext()).workExperienceDao().observeByCardId(cardId);
+        experienceLiveData.observe(getViewLifecycleOwner(), exp -> experienceAdapter.submitList(exp));
 
         bookingsLiveData = DbProvider.db(requireContext()).workBookingDao().observeForDay(cardId, selectedEpochDay);
         bookingsLiveData.observe(getViewLifecycleOwner(), bookings -> {
             if (!isWorkDay(selectedEpochDay)) {
-                binding.dayHint.setText("Нерабочий день");
+                binding.dayHint.setText(R.string.work_day_hint_off);
                 slotsAdapter.submitList(new ArrayList<>());
                 return;
             }
-            binding.dayHint.setText("График работы");
+            binding.dayHint.setText(R.string.work_day_hint_working);
 
             Map<Integer, WorkBookingEntity> byStart = new HashMap<>();
             if (bookings != null) {
@@ -286,6 +377,37 @@ public class SelfWorkFragment extends Fragment {
                 DbProvider.db(requireContext()).workBookingDao().insert(new WorkBookingEntity(cardId, selectedEpochDay, startMinutes, name));
             }
         });
+    }
+
+    private void showLanguageDialog() {
+        String[] langs = {getString(R.string.lang_en), getString(R.string.lang_ru)};
+        String[] codes = {"en", "ru"};
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.language_settings)
+                .setItems(langs, (dialog, which) -> {
+                    updateLocale(codes[which]);
+                })
+                .show();
+    }
+
+    private void updateLocale(String langCode) {
+        android.content.res.Resources res = getResources();
+        android.util.DisplayMetrics dm = res.getDisplayMetrics();
+        android.content.res.Configuration conf = res.getConfiguration();
+        conf.setLocale(new java.util.Locale(langCode));
+        res.updateConfiguration(conf, dm);
+        requireActivity().recreate();
+    }
+
+    private void showThemeDialog() {
+        String[] themes = {getString(R.string.theme_light), getString(R.string.theme_dark)};
+        int[] modes = {androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO, androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES};
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.theme_settings)
+                .setItems(themes, (dialog, which) -> {
+                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(modes[which]);
+                })
+                .show();
     }
 
     private static String getText(android.widget.TextView view) {
