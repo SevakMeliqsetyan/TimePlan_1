@@ -44,8 +44,19 @@ public class RegisterActivity extends AppCompatActivity {
             auth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(RegisterActivity.this, task -> {
                         if(task.isSuccessful()){
-                            Toast.makeText(RegisterActivity.this, "Регистрация успешна", Toast.LENGTH_SHORT).show();
-                            finish();
+                            com.google.firebase.auth.FirebaseUser user = auth.getCurrentUser();
+                            if (user != null) {
+                                user.sendEmailVerification()
+                                        .addOnCompleteListener(verifyTask -> {
+                                            if (verifyTask.isSuccessful()) {
+                                                Toast.makeText(RegisterActivity.this, "Регистрация успешна. Проверьте почту для подтверждения.", Toast.LENGTH_LONG).show();
+                                                auth.signOut(); // Выходим, чтобы пользователь подтвердил почту перед входом
+                                                finish();
+                                            } else {
+                                                Toast.makeText(RegisterActivity.this, "Ошибка отправки письма: " + verifyTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        });
+                            }
                         } else {
                             Toast.makeText(RegisterActivity.this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                         }
