@@ -29,16 +29,12 @@ public class LoginActivity extends AppCompatActivity {
         // Инициализация Firebase
         auth = FirebaseAuth.getInstance();
 
-        // ПРОВЕРКА: если пользователь уже вошел и подтвердил почту, сразу переходим на MainActivity
+        // ПРОВЕРКА: если пользователь уже вошел, сразу переходим на MainActivity
         FirebaseUser currentUser = auth.getCurrentUser();
         if (currentUser != null) {
-            if (currentUser.isEmailVerified()) {
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                finish();
-                return;
-            } else {
-                auth.signOut();
-            }
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            finish();
+            return;
         }
 
         setContentView(R.layout.activity_login);
@@ -75,16 +71,10 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    FirebaseUser user = auth.getCurrentUser();
-                                    if (user != null && user.isEmailVerified()) {
-                                        Toast.makeText(LoginActivity.this, "Вход выполнен", Toast.LENGTH_SHORT).show();
-                                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                    } else {
-                                        Toast.makeText(LoginActivity.this, "Пожалуйста, подтвердите ваш email.", Toast.LENGTH_LONG).show();
-                                        auth.signOut();
-                                    }
+                                    Toast.makeText(LoginActivity.this, "Вход выполнен", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
                                 } else {
                                     Toast.makeText(LoginActivity.this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                                 }
