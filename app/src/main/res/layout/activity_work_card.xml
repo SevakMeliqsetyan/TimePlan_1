@@ -22,7 +22,20 @@
             app:menu="@menu/menu_work_profile"
             app:navigationIcon="@drawable/ic_back"
             app:navigationIconTint="?attr/colorOnSurface"
-            tools:title="Имя Фамилия" />
+            tools:title="Имя Фамилия">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_view_requests"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="@string/btn_view_requests"
+                android:visibility="gone"
+                app:icon="@drawable/ic_notifications"
+                tools:visibility="visible" />
+
+        </com.google.android.material.appbar.MaterialToolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -44,6 +57,44 @@
             android:paddingTop="16dp"
             android:paddingRight="8dp"
             android:paddingBottom="100dp"> <!-- Увеличен отступ снизу -->
+
+            <!-- Empty State for Work Card -->
+            <LinearLayout
+                android:id="@+id/empty_work_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginTop="80dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/work_empty_create_title"
+                    android:textAlignment="center"
+                    android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                    android:textColor="?attr/colorOnSurface"
+                    android:padding="24dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_create_work_card"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp"
+                    app:icon="@drawable/ic_add"
+                    app:iconSize="80dp"
+                    app:iconPadding="0dp"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="70dp"
+                    app:backgroundTint="?attr/colorPrimaryContainer"
+                    app:iconTint="?attr/colorOnPrimaryContainer" />
+
+            </LinearLayout>
 
             <!-- Календарь и график (скрыты по умолчанию) -->
             <LinearLayout
@@ -479,6 +530,17 @@
                         app:backgroundTint="?attr/colorPrimary"
                         android:textColor="@android:color/white" />
 
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_logout"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Выйти из аккаунта"
+                        android:textColor="?attr/colorError"
+                        app:icon="@drawable/ic_delete"
+                        app:iconTint="?attr/colorError" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -493,6 +555,7 @@
                 tools:visibility="visible">
 
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/my_work_card_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardBackgroundColor="?attr/colorSurface"
@@ -506,31 +569,62 @@
                         android:orientation="vertical"
                         android:padding="20dp">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/card_full_name"
+                        <RelativeLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-                            android:textColor="?attr/colorOnSurface"
-                            tools:text="Иван Иванов" />
+                            android:layout_height="wrap_content">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/card_profession"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                            android:textColor="?attr/colorPrimary"
-                            tools:text="Дизайнер" />
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_toStartOf="@id/card_photo_container"
+                                android:orientation="vertical">
 
-                        <com.google.android.material.textview.MaterialTextView
-                            android:id="@+id/card_age"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            tools:text="Возраст: 25" />
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/card_full_name"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                                    android:textColor="?attr/colorOnSurface"
+                                    tools:text="Иван Иванов" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/card_profession"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                                    android:textColor="?attr/colorPrimary"
+                                    tools:text="Дизайнер" />
+
+                                <com.google.android.material.textview.MaterialTextView
+                                    android:id="@+id/card_age"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    tools:text="Возраст: 25" />
+                            </LinearLayout>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/card_photo_container"
+                                android:layout_width="80dp"
+                                android:layout_height="80dp"
+                                android:layout_alignParentEnd="true"
+                                app:cardCornerRadius="40dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="?attr/colorOutlineVariant"
+                                app:strokeWidth="1dp">
+
+                                <ImageView
+                                    android:id="@+id/card_photo"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:scaleType="centerCrop"
+                                    android:contentDescription="@string/work_profile_title"
+                                    android:src="@drawable/ic_person" />
+                            </com.google.android.material.card.MaterialCardView>
+                        </RelativeLayout>
 
                         <View
                             android:layout_width="match_parent"
@@ -562,6 +656,100 @@
                             android:layout_marginTop="8dp"
                             android:text="@string/add_experience"
                             app:icon="@drawable/ic_add" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/label_theme"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/theme_settings"
+                            android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+
+                        <LinearLayout
+                            android:id="@+id/color_picker_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:id="@+id/color_indigo"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#818CF8" />
+
+                            <View
+                                android:id="@+id/color_teal"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#2DD4BF" />
+
+                            <View
+                                android:id="@+id/color_rose"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#FB7185" />
+
+                            <View
+                                android:id="@+id/color_amber"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#FBBF24" />
+
+                            <View
+                                android:id="@+id/color_slate"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#94A3B8" />
+
+                            <View
+                                android:id="@+id/color_violet"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#8B5CF6" />
+
+                            <View
+                                android:id="@+id/color_emerald"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#10B981" />
+
+                            <View
+                                android:id="@+id/color_orange"
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:layout_margin="4dp"
+                                android:background="@drawable/bg_pill"
+                                android:backgroundTint="#F59E0B" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_disconnect"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/btn_disconnect"
+                            android:textColor="?attr/colorError"
+                            app:icon="@drawable/ic_delete"
+                            app:iconTint="?attr/colorError" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

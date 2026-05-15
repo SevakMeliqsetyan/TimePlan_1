@@ -56,7 +56,10 @@ public class AddCardBottomSheet extends BottomSheetDialogFragment {
             }
             binding.titleInputLayout.setError(null);
 
-            CardEntity entity = new CardEntity(selectedType, title, System.currentTimeMillis());
+            String uid = com.google.firebase.auth.FirebaseAuth.getInstance().getUid();
+            CardEntity entity = new CardEntity(selectedType, title, System.currentTimeMillis(), true);
+            entity.ownerUid = uid;
+
             if ("WORK".equals(selectedType)) {
                 entity.sessionMinutes = 90;
                 entity.workDaysMask = WorkDays.defaultMonToFri();

@@ -6,6 +6,8 @@ import androidx.room.Entity;
 import androidx.room.Ignore; // Важно добавить этот импорт
 import androidx.room.PrimaryKey;
 
+import java.util.List;
+
 @Entity(tableName = "cards")
 public class CardEntity {
     @PrimaryKey(autoGenerate = true)
@@ -17,7 +19,9 @@ public class CardEntity {
     public String title;
     public long createdAtEpochMs;
     public boolean isSelf;
-
+    
+    @Nullable
+    public String ownerUid; // UID владельца из Firebase
     @Nullable
     public String firstName;
     @Nullable
@@ -34,6 +38,12 @@ public class CardEntity {
     public Integer breakStartMinutes;
     @Nullable
     public Integer breakEndMinutes;
+    @Nullable
+    public String photoUri;
+    public int backgroundColor;
+
+    @Ignore
+    public List<WorkExperienceEntity> experienceList;
 
     @Ignore // Room проигнорирует этот конструктор и ошибки не будет
     public CardEntity(@NonNull String type, @NonNull String title, long createdAtEpochMs) {
@@ -49,5 +59,10 @@ public class CardEntity {
         this.workDaysMask = 0;
         this.workStartMinutes = 9 * 60;
         this.workEndMinutes = 20 * 60;
+        this.backgroundColor = 0xFF818CF8; // Default indigo
+    }
+
+    // Добавляем пустой конструктор для Firebase
+    public CardEntity() {
     }
 }

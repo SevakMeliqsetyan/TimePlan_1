@@ -1,5 +1,6 @@
 package sevak.meliqsetyan.samsung_project_2;
 
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -17,11 +18,13 @@ public class WorkSlotsAdapter extends ListAdapter<WorkSlotsAdapter.WorkSlotUi, W
     public static class WorkSlotUi {
         public final int startMinutes;
         public final boolean busy;
+        public final boolean pending;
         public final String clientName;
 
-        public WorkSlotUi(int startMinutes, boolean busy, String clientName) {
+        public WorkSlotUi(int startMinutes, boolean busy, boolean pending, String clientName) {
             this.startMinutes = startMinutes;
             this.busy = busy;
+            this.pending = pending;
             this.clientName = clientName;
         }
     }
@@ -62,16 +65,26 @@ public class WorkSlotsAdapter extends ListAdapter<WorkSlotsAdapter.WorkSlotUi, W
             binding.slotTime.setText(TimeUtils.formatTimeMinutes(slot.startMinutes));
 
             if (slot.busy) {
-                // Исправлено: используем slotTitle вместо client
-                binding.slotTitle.setText(slot.clientName);
-                binding.slotTitle.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.text_primary));
+                String title = TextUtils.isEmpty(slot.clientName) 
+                    ? binding.getRoot().getContext().getString(R.string.slot_occupied) 
+                    : slot.clientName;
+                binding.slotTitle.setText(title);
+                binding.slotTitle.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.text_secondary));
                 binding.root.setCardBackgroundColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.slot_busy_background));
-                binding.root.setStrokeColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.slot_border));
+                binding.root.setStrokeColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.slot_busy_border));
+                binding.root.setCardElevation(0f);
+            } else if (slot.pending) {
+                binding.slotTitle.setText(binding.getRoot().getContext().getString(R.string.work_slot_pending));
+                binding.slotTitle.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.teal_accent));
+                binding.root.setCardBackgroundColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.glass_card_bg));
+                binding.root.setStrokeColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.teal_accent));
+                binding.root.setCardElevation(4f);
             } else {
                 binding.slotTitle.setText(binding.getRoot().getContext().getString(R.string.work_slot_free));
-                binding.slotTitle.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.text_secondary));
-                binding.root.setCardBackgroundColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.surface_elevated_dark));
-                binding.root.setStrokeColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.divider_dark));
+                binding.slotTitle.setTextColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.text_primary));
+                binding.root.setCardBackgroundColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.slot_free_background));
+                binding.root.setStrokeColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.slot_border));
+                binding.root.setCardElevation(2f);
             }
 
             binding.getRoot().setOnClickListener(v -> listener.onSlotClick(slot));
@@ -88,6 +101,7 @@ public class WorkSlotsAdapter extends ListAdapter<WorkSlotsAdapter.WorkSlotUi, W
         public boolean areContentsTheSame(@NonNull WorkSlotUi oldItem, @NonNull WorkSlotUi newItem) {
             return oldItem.startMinutes == newItem.startMinutes
                     && oldItem.busy == newItem.busy
+                    && oldItem.pending == newItem.pending
                     && ((oldItem.clientName == null && newItem.clientName == null) ||
                     (oldItem.clientName != null && oldItem.clientName.equals(newItem.clientName)));
         }

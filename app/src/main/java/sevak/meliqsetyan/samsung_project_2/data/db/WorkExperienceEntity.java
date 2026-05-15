@@ -20,6 +20,10 @@ public class WorkExperienceEntity {
     public String label;
     public String value;
 
+    public WorkExperienceEntity() {
+    }
+
+    @androidx.room.Ignore
     public WorkExperienceEntity(long cardId, String label, String value) {
         this.cardId = cardId;
         this.label = label;

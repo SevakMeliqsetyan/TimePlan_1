@@ -1,55 +1,59 @@
 package sevak.meliqsetyan.samsung_project_2.util;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.ZoneId;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 public final class TimeUtils {
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd MMM, EEE");
-    private static final DateTimeFormatter DATE_LONG_FMT = DateTimeFormatter.ofPattern("dd MMMM yyyy");
-    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd MMM, EEE", Locale.getDefault());
+    private static final SimpleDateFormat DATE_LONG_FMT = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+    private static final SimpleDateFormat TIME_FMT = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
     private TimeUtils() {}
 
     public static long todayEpochDay() {
-        return LocalDate.now(ZoneId.systemDefault()).toEpochDay();
+        Calendar cal = Calendar.getInstance();
+        return toEpochDay(cal);
     }
 
     public static String formatTimeMinutes(int minutesFromMidnight) {
         int h = Math.max(0, minutesFromMidnight) / 60;
         int m = Math.max(0, minutesFromMidnight) % 60;
-        return String.format("%02d:%02d", h, m);
+        return String.format(Locale.getDefault(), "%02d:%02d", h, m);
     }
 
-    /**
-     * @return minutes from midnight, or -1 if value can't be parsed.
-     */
     public static int parseTimeToMinutes(String hhmm) {
-        if (hhmm == null) return -1;
-        String v = hhmm.trim();
-        if (v.isEmpty()) return -1;
+        if (hhmm == null || hhmm.trim().isEmpty()) return -1;
         try {
-            LocalTime t = LocalTime.parse(v, TIME_FMT);
-            return t.getHour() * 60 + t.getMinute();
+            String[] parts = hhmm.split(":");
+            int h = Integer.parseInt(parts[0]);
+            int m = Integer.parseInt(parts[1]);
+            return h * 60 + m;
         } catch (Exception e) {
             return -1;
         }
     }
 
     public static String formatEpochDayShort(long epochDay) {
-        return LocalDate.ofEpochDay(epochDay).format(DATE_FMT);
+        return DATE_FMT.format(new Date(epochDayToMillis(epochDay)));
     }
 
     public static String formatEpochDayLong(long epochDay) {
-        return LocalDate.ofEpochDay(epochDay).format(DATE_LONG_FMT);
-    }
-
-    public static long plusMonthsFromTodayEpochDay(int months) {
-        return LocalDate.now(ZoneId.systemDefault()).plusMonths(months).toEpochDay();
+        return DATE_LONG_FMT.format(new Date(epochDayToMillis(epochDay)));
     }
 
     public static long epochDayToMillis(long epochDay) {
-        return LocalDate.ofEpochDay(epochDay).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return epochDay * 24 * 60 * 60 * 1000L;
+    }
+
+    public static long toEpochDay(Calendar cal) {
+        // Очищаем время для точного расчета дня
+        Calendar c = (Calendar) cal.clone();
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTimeInMillis() / (24 * 60 * 60 * 1000L);
     }
 }

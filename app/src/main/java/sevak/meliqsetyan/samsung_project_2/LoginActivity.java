@@ -23,6 +23,13 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth auth;
 
     @Override
+    protected void attachBaseContext(android.content.Context newBase) {
+        String lang = newBase.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+                .getString("language", "en");
+        super.attachBaseContext(MainApplication.updateLocale(newBase, lang));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -62,7 +69,7 @@ public class LoginActivity extends AppCompatActivity {
                 String password = etPassword.getText().toString().trim();
 
                 if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(LoginActivity.this, "Заполните все поля", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, R.string.fill_all_fields, Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -71,12 +78,12 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(LoginActivity.this, "Вход выполнен", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(LoginActivity.this, R.string.login_success, Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
                                     finish();
                                 } else {
-                                    Toast.makeText(LoginActivity.this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(LoginActivity.this, getString(R.string.error_prefix, task.getException().getMessage()), Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });

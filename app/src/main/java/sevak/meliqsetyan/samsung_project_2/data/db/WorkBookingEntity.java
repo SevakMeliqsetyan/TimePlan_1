@@ -1,6 +1,7 @@
 package sevak.meliqsetyan.samsung_project_2.data.db;
 
 import androidx.room.Entity;
+import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
@@ -9,7 +10,13 @@ import androidx.room.PrimaryKey;
         indices = {
                 @Index(value = {"cardId", "dateEpochDay"}),
                 @Index(value = {"cardId", "dateEpochDay", "startMinutes"}, unique = true)
-        }
+        },
+        foreignKeys = @ForeignKey(
+                entity = CardEntity.class,
+                parentColumns = "id",
+                childColumns = "cardId",
+                onDelete = ForeignKey.CASCADE
+        )
 )
 public class WorkBookingEntity {
     @PrimaryKey(autoGenerate = true)

@@ -16,6 +16,13 @@ public class RegisterActivity extends AppCompatActivity {
     private FirebaseAuth auth;
 
     @Override
+    protected void attachBaseContext(android.content.Context newBase) {
+        String lang = newBase.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+                .getString("language", "en");
+        super.attachBaseContext(MainApplication.updateLocale(newBase, lang));
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
@@ -37,7 +44,7 @@ public class RegisterActivity extends AppCompatActivity {
             String password = etPassword.getText().toString().trim();
 
             if(email.isEmpty() || password.isEmpty()){
-                Toast.makeText(RegisterActivity.this, "Заполните все поля", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, R.string.fill_all_fields, Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -58,7 +65,7 @@ public class RegisterActivity extends AppCompatActivity {
                                         });
                             }
                         } else {
-                            Toast.makeText(RegisterActivity.this, "Ошибка: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(RegisterActivity.this, getString(R.string.error_prefix, task.getException().getMessage()), Toast.LENGTH_SHORT).show();
                         }
                     });
         });

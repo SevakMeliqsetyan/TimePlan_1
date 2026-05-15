@@ -45,7 +45,13 @@ public class WorkExperienceAdapter extends ListAdapter<WorkExperienceEntity, Wor
         WorkExperienceEntity item = getItem(position);
         holder.binding.textLabel.setText(item.label);
         holder.binding.textValue.setText(item.value);
-        holder.binding.btnDelete.setOnClickListener(v -> listener.onDelete(item));
+        
+        if (listener != null) {
+            holder.binding.btnDelete.setVisibility(android.view.View.VISIBLE);
+            holder.binding.btnDelete.setOnClickListener(v -> listener.onDelete(item));
+        } else {
+            holder.binding.btnDelete.setVisibility(android.view.View.GONE);
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

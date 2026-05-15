@@ -18,7 +18,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.lifecycle.LiveData;
 
-import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
 
 import sevak.meliqsetyan.samsung_project_2.data.db.DbProvider;
@@ -78,8 +78,9 @@ public class SelfPersonalFragment extends Fragment {
 
         // Работаем со стандартным CalendarView
         binding.calendarView.setOnDateChangeListener((cv, year, month, dayOfMonth) -> {
-            // Месяц в CalendarView начинается с 0
-            selectedEpochDay = LocalDate.of(year, month + 1, dayOfMonth).toEpochDay();
+            Calendar cal = Calendar.getInstance();
+            cal.set(year, month, dayOfMonth);
+            selectedEpochDay = TimeUtils.toEpochDay(cal);
             binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
             observeSelectedDay();
         });

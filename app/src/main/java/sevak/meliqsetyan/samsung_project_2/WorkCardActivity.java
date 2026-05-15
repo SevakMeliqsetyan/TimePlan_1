@@ -2,7 +2,12 @@ package sevak.meliqsetyan.samsung_project_2;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.View;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,7 +16,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import java.time.LocalDate;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,8 +48,59 @@ public class WorkCardActivity extends AppCompatActivity {
 
     private WorkSlotsAdapter slotsAdapter;
     private LiveData<List<WorkBookingEntity>> bookingsLiveData;
+    private LiveData<List<sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity>> requestsLiveData;
 
     private boolean profileInitialized = false;
+
+    private boolean isSelfCard = false;
+    private WorkExperienceAdapter experienceAdapter;
+
+    private final androidx.activity.result.ActivityResultLauncher<String> photoLauncher = registerForActivityResult(
+            new androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    String localUri = copyUriToInternal(uri);
+                    if (localUri != null) {
+                        savePhotoUri(localUri);
+                    }
+                }
+            }
+    );
+
+    private String copyUriToInternal(android.net.Uri uri) {
+        try (InputStream is = getContentResolver().openInputStream(uri)) {
+            if (is == null) return null;
+            File file = new File(getFilesDir(), "profile_" + System.currentTimeMillis() + ".jpg");
+            try (FileOutputStream os = new FileOutputStream(file)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
+                }
+                return android.net.Uri.fromFile(file).toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void savePhotoUri(String uri) {
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(this).cardDao().getByIdSync(cardId);
+            if (card != null) {
+                card.photoUri = uri;
+                DbProvider.db(this).cardDao().update(card);
+            }
+        });
+    }
+
+    @Override
+    protected void attachBaseContext(android.content.Context newBase) {
+        String lang = newBase.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+                .getString("language", "en");
+        super.attachBaseContext(MainApplication.updateLocale(newBase, lang));
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,27 +124,89 @@ public class WorkCardActivity extends AppCompatActivity {
 
         slotsAdapter = new WorkSlotsAdapter(slot -> {
             if (selectedEpochDay < TimeUtils.todayEpochDay()) {
-                Toast.makeText(this, "Нельзя редактировать записи в прошедших днях", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.past_day_edit_error, Toast.LENGTH_SHORT).show();
                 return;
             }
-            EditWorkSlotDialog.show(
-                    getSupportFragmentManager(),
-                    TimeUtils.formatTimeMinutes(slot.startMinutes),
-                    slot.busy ? slot.clientName : "",
-                    clientName -> saveSlot(slot.startMinutes, clientName)
-            );
+            
+            if (isSelfCard) {
+                EditWorkSlotDialog.show(
+                        getSupportFragmentManager(),
+                        TimeUtils.formatTimeMinutes(slot.startMinutes),
+                        slot.busy ? slot.clientName : "",
+                        clientName -> saveSlot(slot.startMinutes, clientName)
+                );
+            } else {
+                if (slot.busy) {
+                    Toast.makeText(this, R.string.slot_occupied, Toast.LENGTH_SHORT).show();
+                } else {
+                    showBookingRequestDialog(slot);
+                }
+            }
         });
         binding.slotsList.setLayoutManager(new LinearLayoutManager(this));
         binding.slotsList.setAdapter(slotsAdapter);
 
+        experienceAdapter = new WorkExperienceAdapter(null);
+        binding.experienceList.setLayoutManager(new LinearLayoutManager(this));
+        binding.experienceList.setAdapter(experienceAdapter);
+
         setupCalendar();
         setupDaysChips();
+        setupColorPicker();
 
         binding.btnSaveProfile.setOnClickListener(v -> saveProfile());
+        binding.btnDisconnect.setOnClickListener(v -> confirmDisconnect());
+        binding.btnViewRequests.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(this, RequestsActivity.class);
+            intent.putExtra("CARD_ID", cardId);
+            startActivity(intent);
+        });
 
         DbProvider.db(this).cardDao().observeById(cardId).observe(this, card -> {
             if (card == null) return;
             binding.toolbar.setTitle(card.title);
+            isSelfCard = card.isSelf;
+
+            binding.scheduleContainer.setVisibility(View.VISIBLE);
+
+            if (isSelfCard) {
+                binding.btnViewRequests.setVisibility(View.VISIBLE);
+                binding.profileCard.setVisibility(View.VISIBLE);
+                binding.myCardContainer.setVisibility(View.GONE);
+                binding.btnSaveProfile.setVisibility(View.VISIBLE);
+                binding.btnDisconnect.setVisibility(View.GONE);
+                binding.cardPhotoContainer.setOnClickListener(v -> photoLauncher.launch("image/*"));
+                enableEditing(true);
+            } else {
+                binding.btnViewRequests.setVisibility(View.GONE);
+                binding.profileCard.setVisibility(View.GONE);
+                binding.myCardContainer.setVisibility(View.VISIBLE);
+                binding.btnSaveProfile.setVisibility(View.GONE);
+                binding.btnDisconnect.setVisibility(View.VISIBLE);
+
+                // Заполняем данные для просмотра
+                String fullName = (card.firstName != null ? card.firstName : "") + " " + (card.lastName != null ? card.lastName : "");
+                binding.cardFullName.setText(fullName.trim().isEmpty() ? card.title : fullName.trim());
+                binding.cardProfession.setText(card.profession != null ? card.profession : "");
+                binding.cardAge.setText(getString(R.string.work_age_label, (card.age != null ? String.valueOf(card.age) : "—")));
+                binding.btnAddExperience.setVisibility(View.GONE);
+                binding.colorPickerContainer.setVisibility(View.GONE);
+                binding.labelTheme.setVisibility(View.GONE);
+            }
+
+            if (card.backgroundColor != 0) {
+                binding.myWorkCardView.setCardBackgroundColor(card.backgroundColor);
+            }
+
+            if (card.photoUri != null) {
+                try {
+                    binding.cardPhoto.setImageURI(android.net.Uri.parse(card.photoUri));
+                } catch (Exception e) {
+                    binding.cardPhoto.setImageResource(R.drawable.ic_person);
+                }
+            } else {
+                binding.cardPhoto.setImageResource(R.drawable.ic_person);
+            }
 
             if (!profileInitialized) {
                 profileInitialized = true;
@@ -108,6 +229,31 @@ public class WorkCardActivity extends AppCompatActivity {
                 }
             }
             observeSelectedDayBookings();
+
+            DbProvider.db(this).workExperienceDao().observeByCardId(cardId).observe(this, exp -> {
+                if (experienceAdapter != null) experienceAdapter.submitList(exp);
+            });
+        });
+    }
+
+    private void setupColorPicker() {
+        binding.colorIndigo.setOnClickListener(v -> updateCardColor(0xFF818CF8));
+        binding.colorTeal.setOnClickListener(v -> updateCardColor(0xFF2DD4BF));
+        binding.colorRose.setOnClickListener(v -> updateCardColor(0xFFFB7185));
+        binding.colorAmber.setOnClickListener(v -> updateCardColor(0xFFFBBF24));
+        binding.colorSlate.setOnClickListener(v -> updateCardColor(0xFF94A3B8));
+        binding.colorViolet.setOnClickListener(v -> updateCardColor(0xFF8B5CF6));
+        binding.colorEmerald.setOnClickListener(v -> updateCardColor(0xFF10B981));
+        binding.colorOrange.setOnClickListener(v -> updateCardColor(0xFFF59E0B));
+    }
+
+    private void updateCardColor(int color) {
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(this).cardDao().getByIdSync(cardId);
+            if (card != null) {
+                card.backgroundColor = color;
+                DbProvider.db(this).cardDao().update(card);
+            }
         });
     }
 
@@ -119,7 +265,9 @@ public class WorkCardActivity extends AppCompatActivity {
         binding.calendarView.setMinDate(System.currentTimeMillis() - 1000);
 
         binding.calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            selectedEpochDay = LocalDate.of(year, month + 1, dayOfMonth).toEpochDay();
+            Calendar cal = Calendar.getInstance();
+            cal.set(year, month, dayOfMonth);
+            selectedEpochDay = TimeUtils.toEpochDay(cal);
             binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
             observeSelectedDayBookings();
         });
@@ -149,23 +297,117 @@ public class WorkCardActivity extends AppCompatActivity {
         if (bookingsLiveData != null) {
             bookingsLiveData.removeObservers(this);
         }
+        if (requestsLiveData != null) {
+            requestsLiveData.removeObservers(this);
+        }
+
         bookingsLiveData = DbProvider.db(this).workBookingDao().observeForDay(cardId, selectedEpochDay);
-        bookingsLiveData.observe(this, bookings -> {
-            Map<Integer, WorkBookingEntity> byStart = new HashMap<>();
-            if (bookings != null) {
-                for (WorkBookingEntity b : bookings) {
-                    byStart.put(b.startMinutes, b);
+        requestsLiveData = DbProvider.db(this).bookingRequestDao().observePendingForCard(cardId);
+
+        // Используем MediatorLiveData или просто обновляем при изменении любого из источников
+        bookingsLiveData.observe(this, bookings -> updateSlotsUi());
+        requestsLiveData.observe(this, requests -> updateSlotsUi());
+    }
+
+    private void updateSlotsUi() {
+        List<WorkBookingEntity> bookings = bookingsLiveData.getValue();
+        List<sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity> requests = requestsLiveData.getValue();
+
+        Map<Integer, WorkBookingEntity> bookingsMap = new HashMap<>();
+        if (bookings != null) {
+            for (WorkBookingEntity b : bookings) {
+                bookingsMap.put(b.startMinutes, b);
+            }
+        }
+
+        Map<Integer, sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity> requestsMap = new HashMap<>();
+        if (requests != null) {
+            for (sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity r : requests) {
+                if (r.dateEpochDay == selectedEpochDay) {
+                    requestsMap.put(r.startMinutes, r);
+                }
+            }
+        }
+
+        List<Integer> starts = computeSlotStarts(sessionMinutes);
+        List<WorkSlotsAdapter.WorkSlotUi> ui = new ArrayList<>(starts.size());
+        for (int start : starts) {
+            WorkBookingEntity b = bookingsMap.get(start);
+            sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity r = requestsMap.get(start);
+
+            boolean busy = b != null && !TextUtils.isEmpty(b.clientName);
+            boolean pending = r != null;
+
+            ui.add(new WorkSlotsAdapter.WorkSlotUi(start, busy, pending, busy ? b.clientName : null));
+        }
+        slotsAdapter.submitList(ui);
+    }
+
+    private void enableEditing(boolean enabled) {
+        binding.inputFirstName.setEnabled(enabled);
+        binding.inputLastName.setEnabled(enabled);
+        binding.inputAge.setEnabled(enabled);
+        binding.inputProfession.setEnabled(enabled);
+        binding.inputSessionMinutes.setEnabled(enabled);
+        binding.chipMon.setClickable(enabled);
+        binding.chipTue.setClickable(enabled);
+        binding.chipWed.setClickable(enabled);
+        binding.chipThu.setClickable(enabled);
+        binding.chipFri.setClickable(enabled);
+        binding.chipSat.setClickable(enabled);
+        binding.chipSun.setClickable(enabled);
+    }
+
+    private void showBookingRequestDialog(WorkSlotsAdapter.WorkSlotUi slot) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.booking_request_dialog_title)
+                .setMessage(getString(R.string.booking_request_dialog_message, 
+                        TimeUtils.formatEpochDayLong(selectedEpochDay), 
+                        TimeUtils.formatTimeMinutes(slot.startMinutes)))
+                .setPositiveButton(R.string.btn_send_request, (dialog, which) -> sendBookingRequest(slot))
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .show();
+    }
+
+    private void sendBookingRequest(WorkSlotsAdapter.WorkSlotUi slot) {
+        DbProvider.io().execute(() -> {
+            CardEntity targetCard = DbProvider.db(this).cardDao().getByIdSync(cardId);
+            if (targetCard == null || targetCard.ownerUid == null) {
+                runOnUiThread(() -> Toast.makeText(this, "Cannot send request: target user ID unknown", Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            CardEntity myWorkCard = DbProvider.db(this).cardDao().getSelfWorkCard();
+            String myName = "Unknown User";
+            String myUid = FirebaseAuth.getInstance().getUid();
+
+            if (myWorkCard != null) {
+                String fullName = (myWorkCard.firstName != null ? myWorkCard.firstName : "") + " " + (myWorkCard.lastName != null ? myWorkCard.lastName : "");
+                myName = fullName.trim().isEmpty() ? myWorkCard.title : fullName.trim();
+            } else {
+                sevak.meliqsetyan.samsung_project_2.data.db.UserProfileEntity profile = DbProvider.db(this).userProfileDao().getFirstSync();
+                if (profile != null) {
+                    myName = (profile.firstName + " " + profile.lastName).trim();
                 }
             }
 
-            List<Integer> starts = computeSlotStarts(sessionMinutes);
-            List<WorkSlotsAdapter.WorkSlotUi> ui = new ArrayList<>(starts.size());
-            for (int start : starts) {
-                WorkBookingEntity b = byStart.get(start);
-                boolean busy = b != null && !TextUtils.isEmpty(b.clientName);
-                ui.add(new WorkSlotsAdapter.WorkSlotUi(start, busy, busy ? b.clientName : null));
-            }
-            slotsAdapter.submitList(ui);
+            Map<String, Object> requestData = new HashMap<>();
+            requestData.put("targetOwnerUid", targetCard.ownerUid);
+            requestData.put("requesterUid", myUid);
+            requestData.put("requesterName", myName);
+            requestData.put("dateEpochDay", selectedEpochDay);
+            requestData.put("startMinutes", slot.startMinutes);
+            requestData.put("status", "PENDING");
+            requestData.put("timestamp", System.currentTimeMillis());
+
+            FirebaseFirestore.getInstance().collection("booking_requests")
+                    .add(requestData)
+                    .addOnSuccessListener(documentReference -> {
+                        runOnUiThread(() -> Toast.makeText(this, R.string.request_sent_success, Toast.LENGTH_SHORT).show());
+                    })
+                    .addOnFailureListener(e -> {
+                        runOnUiThread(() -> Toast.makeText(this, "Failed to send: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    });
         });
     }
 
@@ -173,6 +415,7 @@ public class WorkCardActivity extends AppCompatActivity {
         String firstName = textOrNull(binding.inputFirstName.getText() != null ? binding.inputFirstName.getText().toString() : "");
         String lastName = textOrNull(binding.inputLastName.getText() != null ? binding.inputLastName.getText().toString() : "");
         String profession = textOrNull(binding.inputProfession.getText() != null ? binding.inputProfession.getText().toString() : "");
+        String myUid = FirebaseAuth.getInstance().getUid();
 
         Integer age = null;
         String ageStr = binding.inputAge.getText() != null ? binding.inputAge.getText().toString().trim() : "";
@@ -202,10 +445,32 @@ public class WorkCardActivity extends AppCompatActivity {
             card.age = finalAge;
             card.sessionMinutes = finalSession;
             card.workDaysMask = workDaysMask;
+            if (card.isSelf) {
+                card.ownerUid = myUid;
+            }
             DbProvider.db(this).cardDao().update(card);
         });
 
         observeSelectedDayBookings();
+    }
+
+    private void confirmDisconnect() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(R.string.disconnect_confirm_title)
+                .setMessage(R.string.disconnect_confirm_message)
+                .setPositiveButton(R.string.dialog_delete, (dialog, which) -> disconnectCard())
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .show();
+    }
+
+    private void disconnectCard() {
+        DbProvider.io().execute(() -> {
+            DbProvider.db(this).cardDao().deleteById(cardId);
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Disconnected", Toast.LENGTH_SHORT).show();
+                finish();
+            });
+        });
     }
 
     private void saveSlot(int startMinutes, String clientName) {

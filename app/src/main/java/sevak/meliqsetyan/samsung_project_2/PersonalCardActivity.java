@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.List;
 
@@ -38,6 +37,13 @@ public class PersonalCardActivity extends AppCompatActivity {
     private long selectedEpochDay;
     private PersonalTasksAdapter tasksAdapter;
     private LiveData<List<PersonalTaskEntity>> tasksLiveData;
+
+    @Override
+    protected void attachBaseContext(android.content.Context newBase) {
+        String lang = newBase.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
+                .getString("language", "en");
+        super.attachBaseContext(MainApplication.updateLocale(newBase, lang));
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,13 +67,13 @@ public class PersonalCardActivity extends AppCompatActivity {
 
         tasksAdapter = new PersonalTasksAdapter(task -> {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Удалить задачу?")
-                    .setMessage("Вы уверены, что хотите удалить \"" + task.title + "\"?")
-                    .setPositiveButton("Удалить", (dialog, which) -> {
+                    .setTitle(R.string.delete_task_title)
+                    .setMessage(getString(R.string.delete_record_message, task.title))
+                    .setPositiveButton(R.string.dialog_delete, (dialog, which) -> {
                         cancelNotification(task);
                         DbProvider.io().execute(() -> DbProvider.db(this).personalTaskDao().deleteById(task.id));
                     })
-                    .setNegativeButton("Отмена", null)
+                    .setNegativeButton(R.string.dialog_cancel, null)
                     .show();
         });
         binding.tasksList.setLayoutManager(new LinearLayoutManager(this));
@@ -78,7 +84,7 @@ public class PersonalCardActivity extends AppCompatActivity {
 
         binding.btnAddTask.setOnClickListener(v -> {
             if (selectedEpochDay < TimeUtils.todayEpochDay()) {
-                Toast.makeText(this, "Нельзя добавлять задачи в прошедшие дни", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.past_day_edit_error, Toast.LENGTH_SHORT).show();
             } else {
                 checkAlarmPermissionAndShowDialog();
             }
@@ -100,10 +106,10 @@ public class PersonalCardActivity extends AppCompatActivity {
                             Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
                             startActivity(intent);
                         } catch (Exception e) {
-                            Toast.makeText(this, "Не удалось открыть настройки", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, R.string.open_settings_error, Toast.LENGTH_SHORT).show();
                         }
                     })
-                    .setNegativeButton("Отмена", null).show();
+                    .setNegativeButton(R.string.dialog_cancel, null).show();
         } else {
             showAddTaskDialog();
         }
@@ -114,7 +120,9 @@ public class PersonalCardActivity extends AppCompatActivity {
         binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
         binding.calendarView.setMinDate(System.currentTimeMillis() - 1000);
         binding.calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            selectedEpochDay = LocalDate.of(year, month + 1, dayOfMonth).toEpochDay();
+            Calendar cal = Calendar.getInstance();
+            cal.set(year, month, dayOfMonth);
+            selectedEpochDay = TimeUtils.toEpochDay(cal);
             binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
             updateAddButtonVisibility();
             observeSelectedDay();

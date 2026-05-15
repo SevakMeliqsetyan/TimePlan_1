@@ -58,16 +58,37 @@ public class CardsAdapter extends ListAdapter<CardEntity, CardsAdapter.VH> {
         }
 
         void bind(CardEntity card, Listener listener) {
-            binding.title.setText(card.title);
+            String displayName = card.title;
+            if (card.firstName != null || card.lastName != null) {
+                displayName = ((card.firstName != null ? card.firstName : "") + " " + (card.lastName != null ? card.lastName : "")).trim();
+                if (displayName.isEmpty()) displayName = card.title;
+            }
+            binding.title.setText(displayName);
 
             if ("PERSONAL".equals(card.type)) {
                 binding.typePill.setText(binding.getRoot().getContext().getString(R.string.home_add_personal));
                 binding.typePill.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), R.color.teal_accent));
-                binding.subtitle.setText("Календарь + дела на день");
+                binding.subtitle.setText(R.string.card_type_personal_desc);
             } else {
                 binding.typePill.setText(binding.getRoot().getContext().getString(R.string.home_add_work));
                 binding.typePill.setBackgroundTintList(ContextCompat.getColorStateList(binding.getRoot().getContext(), R.color.purple_accent));
-                binding.subtitle.setText("Расписание клиентов + календарь");
+                binding.subtitle.setText(card.profession != null ? card.profession : binding.getRoot().getContext().getString(R.string.card_type_work_desc));
+            }
+
+            if (card.backgroundColor != 0) {
+                binding.cardView.setCardBackgroundColor(card.backgroundColor);
+            } else {
+                binding.cardView.setCardBackgroundColor(ContextCompat.getColor(binding.getRoot().getContext(), R.color.white));
+            }
+
+            if (card.photoUri != null) {
+                try {
+                    binding.photo.setImageURI(android.net.Uri.parse(card.photoUri));
+                } catch (Exception e) {
+                    binding.photo.setImageResource(R.drawable.ic_person);
+                }
+            } else {
+                binding.photo.setImageResource(R.drawable.ic_person);
             }
 
             binding.getRoot().setOnClickListener(v -> listener.onCardClick(card));
@@ -86,6 +107,9 @@ public class CardsAdapter extends ListAdapter<CardEntity, CardsAdapter.VH> {
 
         @Override
         public boolean areContentsTheSame(@NonNull CardEntity oldItem, @NonNull CardEntity newItem) {
+            if (oldItem.type == null || newItem.type == null) return false;
+            if (oldItem.title == null || newItem.title == null) return false;
+
             return oldItem.createdAtEpochMs == newItem.createdAtEpochMs
                     && oldItem.type.equals(newItem.type)
                     && oldItem.title.equals(newItem.title);

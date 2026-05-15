@@ -15,6 +15,12 @@ public interface WorkExperienceDao {
     @Query("SELECT * FROM work_experience WHERE cardId = :cardId")
     LiveData<List<WorkExperienceEntity>> observeByCardId(long cardId);
 
+    @Query("SELECT * FROM work_experience WHERE cardId = :cardId")
+    List<WorkExperienceEntity> getByCardIdSync(long cardId);
+
+    @Query("DELETE FROM work_experience WHERE cardId = :cardId")
+    void deleteByCardId(long cardId);
+
     @Query("DELETE FROM work_experience WHERE id = :id")
     void deleteById(long id);
 }

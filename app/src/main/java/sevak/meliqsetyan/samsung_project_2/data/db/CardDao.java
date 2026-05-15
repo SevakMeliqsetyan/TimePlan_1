@@ -29,7 +29,19 @@ public interface CardDao {
     CardEntity getSelfWorkCard();
 
     @Query("SELECT * FROM cards WHERE isSelf = 0 ORDER BY createdAtEpochMs DESC")
-    List<CardEntity> getOtherCards();
+    LiveData<List<CardEntity>> observeOtherCards();
+
+    @Query("SELECT * FROM cards WHERE isSelf = 0")
+    List<CardEntity> getOtherCardsSync();
+
+    @Query("SELECT * FROM cards WHERE isSelf = 1")
+    List<CardEntity> getSelfCardsSync();
+
+    @Query("SELECT * FROM cards WHERE isSelf = 1 AND ownerUid IS NULL")
+    List<CardEntity> getSelfCardsMissingUid();
+
+    @Query("SELECT * FROM cards WHERE ownerUid = :uid AND isSelf = 0 LIMIT 1")
+    CardEntity getByOwnerUidSync(String uid);
 
     @Insert
     long insert(CardEntity entity);

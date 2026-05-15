@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_main_gradient"
     android:paddingLeft="8dp"
     android:paddingRight="8dp"
     android:paddingTop="16dp"
@@ -24,31 +25,76 @@
         android:id="@+id/buttons_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
+        android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@id/title">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_my_qr"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/btn_my_qr"
-            app:icon="@drawable/ic_settings" /> <!-- TODO: Replace with QR icon if available -->
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_my_qr"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                app:icon="@drawable/ic_card"
+                app:iconGravity="textStart"
+                app:iconSize="36dp"
+                app:iconPadding="0dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Large" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/btn_my_qr"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                android:textColor="?attr/colorOnSurface" />
+        </LinearLayout>
 
         <Space
-            android:layout_width="12dp"
+            android:layout_width="64dp"
             android:layout_height="wrap_content" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_scan_qr"
-            style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/btn_scan_qr"
-            app:icon="@drawable/ic_person" /> <!-- TODO: Replace with Scan icon if available -->
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_scan_qr"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="84dp"
+                android:layout_height="84dp"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                app:icon="@drawable/ic_camera"
+                app:iconGravity="textStart"
+                app:iconSize="36dp"
+                app:iconPadding="0dp"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Large" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Scan"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                android:textColor="?attr/colorOnSurface" />
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -56,10 +102,10 @@
         android:id="@+id/subtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:text="@string/connections_subtitle"
         android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-        android:textColor="?attr/colorOnSurface"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/buttons_container" />
@@ -68,13 +114,11 @@
         android:id="@+id/connections_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:clipToPadding="false"
         android:paddingBottom="80dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/subtitle"
-        tools:listitem="@layout/item_work_slot" /> <!-- Temporary tools listitem -->
-
-
+        tools:listitem="@layout/item_card" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

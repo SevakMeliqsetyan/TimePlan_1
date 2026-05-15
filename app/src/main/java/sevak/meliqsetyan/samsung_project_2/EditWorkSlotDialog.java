@@ -38,7 +38,7 @@ public class EditWorkSlotDialog extends DialogFragment {
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
         binding = DialogEditWorkSlotBinding.inflate(requireActivity().getLayoutInflater());
-        binding.title.setText("Слот " + staticTime);
+        binding.title.setText(getContext().getString(R.string.slot_title_format, staticTime));
         if (!TextUtils.isEmpty(staticInitialName)) {
             binding.inputClient.setText(staticInitialName);
             binding.inputClient.setSelection(staticInitialName.length());
@@ -52,7 +52,7 @@ public class EditWorkSlotDialog extends DialogFragment {
                         staticListener.onSave(name);
                     }
                 })
-                .setNeutralButton("Очистить", (dialog, which) -> {
+                .setNeutralButton(R.string.clear, (dialog, which) -> {
                     if (staticListener != null) {
                         staticListener.onSave("");
                     }

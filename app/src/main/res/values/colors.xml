@@ -4,32 +4,37 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Dark theme palette -->
-    <color name="background_dark">#FF05060A</color>
-    <color name="surface_dark">#FF111521</color>
-    <color name="surface_elevated_dark">#FF181D2A</color>
-    <color name="bottom_nav_background">#FF05060A</color>
+    <color name="background_dark">#0F172A</color>
+    <color name="surface_dark">#1E293B</color>
+    <color name="surface_elevated_dark">#334155</color>
+    <color name="bottom_nav_background">#0F172A</color>
 
-    <color name="teal_accent">#FF3DD9C4</color>
-    <color name="purple_accent">#FF8B5CF6</color>
-    <color name="danger_red">#FFEF4444</color>
+    <color name="teal_accent">#818CF8</color>
+    <color name="purple_accent">#A78BFA</color>
+    <color name="danger_red">#F87171</color>
 
-    <color name="text_primary">#FFFFFFFF</color>
-    <color name="text_secondary">#B3FFFFFF</color>
-    <color name="divider_dark">#26FFFFFF</color>
+    <color name="text_primary">#F1F5F9</color>
+    <color name="text_secondary">#94A3B8</color>
+    <color name="divider_dark">#1E293B</color>
 
     <!-- Modern Light theme palette -->
-    <color name="modern_light_bg">#FFF0F4FF</color>
-    <color name="modern_light_card">#FFFFFFFF</color>
-    <color name="modern_light_accent">#FF5C7CFA</color>
-    <color name="modern_light_text">#FF2C2E33</color>
-    <color name="modern_light_text_secondary">#FF868E96</color>
-    <color name="modern_light_divider">#FFDEE2E6</color>
-    <color name="modern_light_surface_variant">#FFF1F3F5</color>
-    <color name="modern_light_gradient_start">#FFFFFFFF</color>
-    <color name="modern_light_gradient_end">#FFF0F4FF</color>
+    <color name="modern_light_bg">#F8FAFC</color>
+    <color name="modern_light_card">#FFFFFF</color>
+    <color name="modern_light_accent">#6366F1</color>
+    <color name="modern_light_text">#1E293B</color>
+    <color name="modern_light_text_secondary">#64748B</color>
+    <color name="modern_light_divider">#E2E8F0</color>
+    <color name="modern_light_surface_variant">#F1F5F9</color>
+    <color name="modern_light_gradient_start">#FFFFFF</color>
+    <color name="modern_light_gradient_end">#F1F5F9</color>
 
     <!-- Slot colors -->
-    <color name="slot_free_background">#3314B8A6</color>
-    <color name="slot_busy_background">#FF14B8A6</color>
-    <color name="slot_border">#6614B8A6</color>
+    <color name="slot_free_background">#20818CF8</color>
+    <color name="slot_busy_background">#4094A3B8</color>
+    <color name="slot_border">#33818CF8</color>
+    <color name="slot_busy_border">#4094A3B8</color>
+
+    <!-- Glass card colors -->
+    <color name="glass_card_bg">#1AFFFFFF</color>
+    <color name="glass_card_stroke">#33FFFFFF</color>
 </resources>

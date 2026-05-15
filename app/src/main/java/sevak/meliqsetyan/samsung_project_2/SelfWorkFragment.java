@@ -7,15 +7,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CalendarView; // Используем стандартный
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.lifecycle.LiveData;
 
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +59,37 @@ public class SelfWorkFragment extends Fragment {
 
     private boolean profileInitialized = false;
     private boolean chipsUpdating = false;
+    private boolean forceShowProfile = false;
+
+    private final ActivityResultLauncher<String> photoLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    String localUri = copyUriToInternal(uri);
+                    if (localUri != null) {
+                        savePhotoUri(localUri);
+                    }
+                }
+            }
+    );
+
+    private String copyUriToInternal(android.net.Uri uri) {
+        try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
+            if (is == null) return null;
+            File file = new File(requireContext().getFilesDir(), "profile_" + System.currentTimeMillis() + ".jpg");
+            try (FileOutputStream os = new FileOutputStream(file)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = is.read(buffer)) != -1) {
+                    os.write(buffer, 0, read);
+                }
+                return android.net.Uri.fromFile(file).toString();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     private static final int DAY_START_MIN = 9 * 60;
     private static final int DAY_END_MIN = 20 * 60;
@@ -90,6 +126,27 @@ public class SelfWorkFragment extends Fragment {
 
         binding.btnSaveProfile.setOnClickListener(v -> saveProfile());
         binding.btnAddExperience.setOnClickListener(v -> showAddExperienceDialog());
+        binding.btnLogout.setOnClickListener(v -> logout());
+
+        binding.cardPhotoContainer.setOnClickListener(v -> photoLauncher.launch("image/*"));
+
+        binding.colorIndigo.setOnClickListener(v -> updateCardColor(0xFF818CF8));
+        binding.colorTeal.setOnClickListener(v -> updateCardColor(0xFF2DD4BF));
+        binding.colorRose.setOnClickListener(v -> updateCardColor(0xFFFB7185));
+        binding.colorAmber.setOnClickListener(v -> updateCardColor(0xFFFBBF24));
+        binding.colorSlate.setOnClickListener(v -> updateCardColor(0xFF94A3B8));
+
+        binding.btnCreateWorkCard.setOnClickListener(v -> {
+            forceShowProfile = true;
+            binding.emptyWorkState.setVisibility(View.GONE);
+            binding.profileCard.setVisibility(View.VISIBLE);
+        });
+
+        binding.btnViewRequests.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(requireContext(), RequestsActivity.class);
+            intent.putExtra("CARD_ID", cardId);
+            startActivity(intent);
+        });
 
         binding.btnChangeLang.setOnClickListener(v -> showLanguageDialog());
         binding.btnChangeTheme.setOnClickListener(v -> showThemeDialog());
@@ -110,6 +167,21 @@ public class SelfWorkFragment extends Fragment {
         });
 
         observeCard();
+    }
+
+    private void logout() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.logout_title)
+                .setMessage(R.string.logout_confirm_message)
+                .setPositiveButton(R.string.logout_btn, (dialog, which) -> {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
+                    android.content.Intent intent = new android.content.Intent(requireContext(), LoginActivity.class);
+                    intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    requireActivity().finish();
+                })
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .show();
     }
 
     private void showAddExperienceDialog() {
@@ -150,7 +222,6 @@ public class SelfWorkFragment extends Fragment {
         binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
 
         // Настройка СТАНДАРТНОГО CalendarView
-        LocalDate today = LocalDate.now(ZoneId.systemDefault());
         java.util.Calendar cal = java.util.Calendar.getInstance();
 
         // Устанавливаем минимальную и максимальную дату
@@ -159,8 +230,9 @@ public class SelfWorkFragment extends Fragment {
         binding.calendarView.setMaxDate(cal.getTimeInMillis());
 
         binding.calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
-            // Месяц в CalendarView начинается с 0, прибавляем 1 для LocalDate
-            selectedEpochDay = LocalDate.of(year, month + 1, dayOfMonth).toEpochDay();
+            Calendar selectCal = Calendar.getInstance();
+            selectCal.set(year, month, dayOfMonth);
+            selectedEpochDay = TimeUtils.toEpochDay(selectCal);
             binding.selectedDayTitle.setText(TimeUtils.formatEpochDayLong(selectedEpochDay));
             observeSelectedDayBookings();
         });
@@ -221,23 +293,47 @@ public class SelfWorkFragment extends Fragment {
         String displayName = (card.firstName != null ? card.firstName : "") + " " + (card.lastName != null ? card.lastName : "");
         binding.toolbar.setTitle(displayName.trim());
 
-        // Age Info
+        // Card Info
         binding.cardFullName.setText(displayName.trim());
         binding.cardProfession.setText(card.profession != null ? card.profession : "");
         binding.cardAge.setText(getString(R.string.work_age_label, (card.age != null ? String.valueOf(card.age) : "—")));
 
+        if (card.backgroundColor != 0) {
+            binding.myWorkCardView.setCardBackgroundColor(card.backgroundColor);
+        }
+
+        if (card.photoUri != null) {
+            try {
+                binding.cardPhoto.setImageURI(android.net.Uri.parse(card.photoUri));
+            } catch (Exception e) {
+                binding.cardPhoto.setImageResource(R.drawable.ic_person);
+            }
+        } else {
+            binding.cardPhoto.setImageResource(R.drawable.ic_person);
+        }
+
         boolean isProfileComplete = !TextUtils.isEmpty(card.firstName) && !TextUtils.isEmpty(card.lastName) && !TextUtils.isEmpty(card.profession);
         
         if (isProfileComplete) {
+            binding.emptyWorkState.setVisibility(View.GONE);
             binding.scheduleContainer.setVisibility(View.VISIBLE);
             binding.profileCard.setVisibility(View.GONE);
             binding.myCardContainer.setVisibility(View.GONE);
+            binding.btnViewRequests.setVisibility(View.VISIBLE);
+            binding.btnDisconnect.setVisibility(View.GONE);
             binding.toolbar.getMenu().findItem(R.id.action_settings).setVisible(true);
             binding.toolbar.getMenu().findItem(R.id.action_my_card).setVisible(true);
         } else {
+            if (forceShowProfile) {
+                binding.emptyWorkState.setVisibility(View.GONE);
+                binding.profileCard.setVisibility(View.VISIBLE);
+            } else {
+                binding.emptyWorkState.setVisibility(View.VISIBLE);
+                binding.profileCard.setVisibility(View.GONE);
+            }
             binding.scheduleContainer.setVisibility(View.GONE);
-            binding.profileCard.setVisibility(View.VISIBLE);
             binding.myCardContainer.setVisibility(View.GONE);
+            binding.btnViewRequests.setVisibility(View.GONE);
             binding.toolbar.getMenu().findItem(R.id.action_settings).setVisible(false);
             binding.toolbar.getMenu().findItem(R.id.action_my_card).setVisible(false);
         }
@@ -311,7 +407,7 @@ public class SelfWorkFragment extends Fragment {
             for (int start : starts) {
                 WorkBookingEntity b = byStart.get(start);
                 boolean busy = b != null && !TextUtils.isEmpty(b.clientName);
-                ui.add(new WorkSlotsAdapter.WorkSlotUi(start, busy, busy ? b.clientName : null));
+                ui.add(new WorkSlotsAdapter.WorkSlotUi(start, busy, false, busy ? b.clientName : null));
             }
             slotsAdapter.submitList(ui);
         });
@@ -379,6 +475,26 @@ public class SelfWorkFragment extends Fragment {
         });
     }
 
+    private void savePhotoUri(String uri) {
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(requireContext()).cardDao().getSelfByTypeSync("WORK");
+            if (card != null) {
+                card.photoUri = uri;
+                DbProvider.db(requireContext()).cardDao().update(card);
+            }
+        });
+    }
+
+    private void updateCardColor(int color) {
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(requireContext()).cardDao().getSelfByTypeSync("WORK");
+            if (card != null) {
+                card.backgroundColor = color;
+                DbProvider.db(requireContext()).cardDao().update(card);
+            }
+        });
+    }
+
     private void showLanguageDialog() {
         String[] langs = {getString(R.string.lang_en), getString(R.string.lang_ru)};
         String[] codes = {"en", "ru"};
@@ -391,11 +507,7 @@ public class SelfWorkFragment extends Fragment {
     }
 
     private void updateLocale(String langCode) {
-        android.content.res.Resources res = getResources();
-        android.util.DisplayMetrics dm = res.getDisplayMetrics();
-        android.content.res.Configuration conf = res.getConfiguration();
-        conf.setLocale(new java.util.Locale(langCode));
-        res.updateConfiguration(conf, dm);
+        ((MainApplication) requireActivity().getApplication()).setLanguage(langCode);
         requireActivity().recreate();
     }
 
@@ -405,7 +517,7 @@ public class SelfWorkFragment extends Fragment {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.theme_settings)
                 .setItems(themes, (dialog, which) -> {
-                    androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(modes[which]);
+                    ((MainApplication) requireActivity().getApplication()).setThemeMode(modes[which]);
                 })
                 .show();
     }
@@ -440,9 +552,19 @@ public class SelfWorkFragment extends Fragment {
     }
 
     private boolean isWorkDay(long epochDay) {
-        LocalDate d = LocalDate.ofEpochDay(epochDay);
-        int dayOfWeek = d.getDayOfWeek().getValue(); // 1 (Mon) to 7 (Sun)
-        int bit = 1 << (dayOfWeek - 1);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(TimeUtils.epochDayToMillis(epochDay));
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK); // 1 (Sun) to 7 (Sat)
+        
+        // Convert to 0 (Mon) to 6 (Sun) to match WorkDays masks
+        int index;
+        if (dayOfWeek == Calendar.SUNDAY) {
+            index = 6;
+        } else {
+            index = dayOfWeek - 2;
+        }
+        
+        int bit = 1 << index;
         return (workDaysMask & bit) != 0;
     }
 

@@ -9,9 +9,10 @@ import androidx.room.RoomDatabase;
                 UserProfileEntity.class,
                 PersonalTaskEntity.class,
                 WorkBookingEntity.class,
-                WorkExperienceEntity.class
+                WorkExperienceEntity.class,
+                BookingRequestEntity.class
         },
-        version = 5,
+        version = 9,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -20,5 +21,6 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract PersonalTaskDao personalTaskDao();
     public abstract WorkBookingDao workBookingDao();
     public abstract WorkExperienceDao workExperienceDao();
+    public abstract BookingRequestDao bookingRequestDao();
 }
 
