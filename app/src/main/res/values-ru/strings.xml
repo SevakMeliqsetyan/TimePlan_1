@@ -153,4 +153,7 @@
     <string name="alarm_permission_message">Пожалуйста, разрешите установку точных будильников в настройках системы для напоминаний о задачах.</string>
     <string name="settings">Настройки</string>
     <string name="open_settings_error">Не удалось открыть настройки</string>
+    <string name="setup_city">Город (только англ.)</string>
+    <string name="error_english_only">Разрешены только английские буквы</string>
+    <string name="city_label">Город: %1$s</string>
 </resources>

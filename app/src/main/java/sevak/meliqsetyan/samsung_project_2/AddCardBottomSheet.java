@@ -1,5 +1,6 @@
 package sevak.meliqsetyan.samsung_project_2;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -60,12 +61,24 @@ public class AddCardBottomSheet extends BottomSheetDialogFragment {
             CardEntity entity = new CardEntity(selectedType, title, System.currentTimeMillis(), true);
             entity.ownerUid = uid;
 
+            Context context = requireContext().getApplicationContext();
             if ("WORK".equals(selectedType)) {
                 entity.sessionMinutes = 90;
                 entity.workDaysMask = WorkDays.defaultMonToFri();
-            }
 
-            DbProvider.io().execute(() -> DbProvider.db(requireContext()).cardDao().insert(entity));
+                DbProvider.io().execute(() -> {
+                    sevak.meliqsetyan.samsung_project_2.data.db.UserProfileEntity profile = DbProvider.db(context).userProfileDao().getFirstSync();
+                    if (profile != null) {
+                        entity.firstName = profile.firstName;
+                        entity.lastName = profile.lastName;
+                    }
+                    DbProvider.db(context).cardDao().insert(entity);
+                });
+            } else {
+                DbProvider.io().execute(() -> {
+                    DbProvider.db(context).cardDao().insert(entity);
+                });
+            }
             dismiss();
         });
     }

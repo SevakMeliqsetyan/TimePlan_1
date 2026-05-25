@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
 
 @Dao
 public interface UserProfileDao {
@@ -16,5 +17,8 @@ public interface UserProfileDao {
 
     @Insert
     long insert(UserProfileEntity entity);
+
+    @Update
+    void update(UserProfileEntity entity);
 }
 

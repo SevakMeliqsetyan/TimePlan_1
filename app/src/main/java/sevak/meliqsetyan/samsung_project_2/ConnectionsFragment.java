@@ -35,6 +35,7 @@ public class ConnectionsFragment extends Fragment {
     private FragmentConnectionsBinding binding;
     private CardsAdapter adapter;
     private AppDatabase db;
+    private long lastClickTime = 0;
 
     private final androidx.activity.result.ActivityResultLauncher<ScanOptions> barcodeLauncher = registerForActivityResult(new ScanContract(),
             result -> {
@@ -86,16 +87,30 @@ public class ConnectionsFragment extends Fragment {
     }
 
     private void setupButtons() {
-        binding.btnMyQr.setOnClickListener(v -> showMyQrDialog());
+        binding.btnMyQr.setOnClickListener(v -> {
+            if (System.currentTimeMillis() - lastClickTime < 500) return;
+            lastClickTime = System.currentTimeMillis();
+            showMyQrDialog();
+        });
         binding.btnScanQr.setOnClickListener(v -> {
-            ScanOptions options = new ScanOptions();
-            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
-            options.setPrompt(getString(R.string.scan_prompt));
-            options.setCameraId(0);
-            options.setBeepEnabled(true);
-            options.setBarcodeImageEnabled(true);
-            options.setOrientationLocked(false);
-            barcodeLauncher.launch(options);
+            if (System.currentTimeMillis() - lastClickTime < 500) return;
+            lastClickTime = System.currentTimeMillis();
+
+            if (!isAdded() || getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.INITIALIZED)) {
+                try {
+                    ScanOptions options = new ScanOptions();
+                    options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
+                    options.setPrompt(getString(R.string.scan_prompt));
+                    options.setCameraId(0);
+                    options.setBeepEnabled(true);
+                    options.setBarcodeImageEnabled(true);
+                    options.setOrientationLocked(false);
+                    barcodeLauncher.launch(options);
+                } catch (Exception e) {
+                    Log.e("ConnectionsFragment", "Failed to launch barcode scanner", e);
+                    Toast.makeText(getContext(), "Scanner error", Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 

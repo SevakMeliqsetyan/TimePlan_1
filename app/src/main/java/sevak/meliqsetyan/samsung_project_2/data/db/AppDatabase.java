@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase;
                 WorkExperienceEntity.class,
                 BookingRequestEntity.class
         },
-        version = 9,
+        version = 10,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

@@ -27,6 +27,8 @@ public class CardEntity {
     @Nullable
     public String lastName;
     @Nullable
+    public String city;
+    @Nullable
     public Integer age;
     @Nullable
     public String profession;

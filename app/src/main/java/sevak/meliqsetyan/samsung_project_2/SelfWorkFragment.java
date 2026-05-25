@@ -5,7 +5,8 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CalendarView; // Используем стандартный
+import android.widget.CalendarView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,6 +26,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import sevak.meliqsetyan.samsung_project_2.data.WorkDays;
 import sevak.meliqsetyan.samsung_project_2.data.db.CardEntity;
 import sevak.meliqsetyan.samsung_project_2.data.db.DbProvider;
@@ -65,30 +71,53 @@ public class SelfWorkFragment extends Fragment {
             new ActivityResultContracts.GetContent(),
             uri -> {
                 if (uri != null) {
-                    String localUri = copyUriToInternal(uri);
-                    if (localUri != null) {
-                        savePhotoUri(localUri);
-                    }
+                    uploadPhotoToFirebase(uri);
                 }
             }
     );
 
-    private String copyUriToInternal(android.net.Uri uri) {
-        try (InputStream is = requireContext().getContentResolver().openInputStream(uri)) {
-            if (is == null) return null;
-            File file = new File(requireContext().getFilesDir(), "profile_" + System.currentTimeMillis() + ".jpg");
-            try (FileOutputStream os = new FileOutputStream(file)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, read);
-                }
-                return android.net.Uri.fromFile(file).toString();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    private void uploadPhotoToFirebase(android.net.Uri fileUri) {
+        String myUid = FirebaseAuth.getInstance().getUid();
+        if (myUid == null) return;
+
+        binding.cardPhoto.setAlpha(0.5f);
+        Toast.makeText(getContext(), "Uploading photo...", Toast.LENGTH_SHORT).show();
+
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                .child("profile_photos")
+                .child(myUid + "_" + System.currentTimeMillis() + ".jpg");
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String downloadUrl = uri.toString();
+                    savePhotoUri(downloadUrl);
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            binding.cardPhoto.setAlpha(1.0f);
+                            loadPhoto(downloadUrl);
+                            Toast.makeText(getContext(), "Photo updated", Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }))
+                .addOnFailureListener(e -> {
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            binding.cardPhoto.setAlpha(1.0f);
+                            Toast.makeText(getContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                });
+    }
+
+    private void loadPhoto(String url) {
+        if (getContext() == null) return;
+        Glide.with(this)
+                .load(url)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .placeholder(R.drawable.ic_person)
+                .error(R.drawable.ic_person)
+                .centerCrop()
+                .into(binding.cardPhoto);
     }
 
     private static final int DAY_START_MIN = 9 * 60;
@@ -303,11 +332,7 @@ public class SelfWorkFragment extends Fragment {
         }
 
         if (card.photoUri != null) {
-            try {
-                binding.cardPhoto.setImageURI(android.net.Uri.parse(card.photoUri));
-            } catch (Exception e) {
-                binding.cardPhoto.setImageResource(R.drawable.ic_person);
-            }
+            loadPhoto(card.photoUri);
         } else {
             binding.cardPhoto.setImageResource(R.drawable.ic_person);
         }

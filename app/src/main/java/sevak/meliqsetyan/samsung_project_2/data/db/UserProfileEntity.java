@@ -15,11 +15,14 @@ public class UserProfileEntity {
     @NonNull
     public String lastName;
 
+    public String city;
+
     public long createdAtEpochMs;
 
-    public UserProfileEntity(@NonNull String firstName, @NonNull String lastName, long createdAtEpochMs) {
+    public UserProfileEntity(@NonNull String firstName, @NonNull String lastName, String city, long createdAtEpochMs) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.city = city;
         this.createdAtEpochMs = createdAtEpochMs;
     }
 }

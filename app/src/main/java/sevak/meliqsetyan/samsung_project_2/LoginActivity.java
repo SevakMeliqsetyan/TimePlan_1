@@ -51,6 +51,16 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnRegisterRedirect = findViewById(R.id.btnRegisterRedirect);
+        Button btnTestUser = findViewById(R.id.btnTestUser);
+
+        // Кнопка для тестового пользователя
+        btnTestUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                etEmail.setText("innovationcampus26@gmail.com");
+                etPassword.setText("Samsung2026");
+            }
+        });
 
         // Переход на регистрацию
         btnRegisterRedirect.setOnClickListener(new View.OnClickListener() {

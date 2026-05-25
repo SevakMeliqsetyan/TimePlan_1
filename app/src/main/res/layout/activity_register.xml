@@ -1,10 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:padding="32dp"
     android:gravity="center"
+    android:background="@drawable/bg_main_gradient"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/logo_container"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="48dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:src="@drawable/ic_clock"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:contentDescription="@string/logo_content_description"/>
+
+        <TextView
+            android:text="@string/app_name"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:layout_marginStart="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 
     <EditText
         android:id="@+id/etEmail"
@@ -33,6 +59,14 @@
         android:text="Back to Login"
         android:layout_marginTop="12dp"
         style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/btnTestUser"
+        android:text="@string/btn_test_user"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 </LinearLayout>

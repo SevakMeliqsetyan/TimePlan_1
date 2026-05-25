@@ -16,8 +16,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.LiveData;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.Calendar;
 import java.util.ArrayList;
@@ -26,8 +30,10 @@ import java.util.List;
 import java.util.Map;
 
 import sevak.meliqsetyan.samsung_project_2.data.WorkDays;
+import sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity;
 import sevak.meliqsetyan.samsung_project_2.data.db.CardEntity;
 import sevak.meliqsetyan.samsung_project_2.data.db.DbProvider;
+import sevak.meliqsetyan.samsung_project_2.data.db.UserProfileEntity;
 import sevak.meliqsetyan.samsung_project_2.data.db.WorkBookingEntity;
 import sevak.meliqsetyan.samsung_project_2.databinding.ActivityWorkCardBinding;
 import sevak.meliqsetyan.samsung_project_2.util.TimeUtils;
@@ -48,41 +54,60 @@ public class WorkCardActivity extends AppCompatActivity {
 
     private WorkSlotsAdapter slotsAdapter;
     private LiveData<List<WorkBookingEntity>> bookingsLiveData;
-    private LiveData<List<sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity>> requestsLiveData;
+    private LiveData<List<BookingRequestEntity>> requestsLiveData;
 
     private boolean profileInitialized = false;
 
     private boolean isSelfCard = false;
     private WorkExperienceAdapter experienceAdapter;
+    private long lastClickTime = 0;
 
     private final androidx.activity.result.ActivityResultLauncher<String> photoLauncher = registerForActivityResult(
             new androidx.activity.result.contract.ActivityResultContracts.GetContent(),
             uri -> {
                 if (uri != null) {
-                    String localUri = copyUriToInternal(uri);
-                    if (localUri != null) {
-                        savePhotoUri(localUri);
-                    }
+                    uploadPhotoToFirebase(uri);
                 }
             }
     );
 
-    private String copyUriToInternal(android.net.Uri uri) {
-        try (InputStream is = getContentResolver().openInputStream(uri)) {
-            if (is == null) return null;
-            File file = new File(getFilesDir(), "profile_" + System.currentTimeMillis() + ".jpg");
-            try (FileOutputStream os = new FileOutputStream(file)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, read);
-                }
-                return android.net.Uri.fromFile(file).toString();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    private void uploadPhotoToFirebase(android.net.Uri fileUri) {
+        String myUid = FirebaseAuth.getInstance().getUid();
+        if (myUid == null) return;
+
+        binding.cardPhoto.setAlpha(0.5f);
+        Toast.makeText(this, "Uploading photo...", Toast.LENGTH_SHORT).show();
+
+        StorageReference storageRef = FirebaseStorage.getInstance().getReference()
+                .child("profile_photos")
+                .child(myUid + "_" + System.currentTimeMillis() + ".jpg");
+
+        storageRef.putFile(fileUri)
+                .addOnSuccessListener(taskSnapshot -> storageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                    String downloadUrl = uri.toString();
+                    savePhotoUri(downloadUrl);
+                    runOnUiThread(() -> {
+                        binding.cardPhoto.setAlpha(1.0f);
+                        loadPhoto(downloadUrl);
+                        Toast.makeText(this, "Photo updated", Toast.LENGTH_SHORT).show();
+                    });
+                }))
+                .addOnFailureListener(e -> {
+                    runOnUiThread(() -> {
+                        binding.cardPhoto.setAlpha(1.0f);
+                        Toast.makeText(this, "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+                });
+    }
+
+    private void loadPhoto(String url) {
+        Glide.with(this)
+                .load(url)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .placeholder(R.drawable.ic_person)
+                .error(R.drawable.ic_person)
+                .centerCrop()
+                .into(binding.cardPhoto);
     }
 
     private void savePhotoUri(String uri) {
@@ -175,7 +200,15 @@ public class WorkCardActivity extends AppCompatActivity {
                 binding.myCardContainer.setVisibility(View.GONE);
                 binding.btnSaveProfile.setVisibility(View.VISIBLE);
                 binding.btnDisconnect.setVisibility(View.GONE);
-                binding.cardPhotoContainer.setOnClickListener(v -> photoLauncher.launch("image/*"));
+                binding.cardPhotoContainer.setOnClickListener(v -> {
+                    if (System.currentTimeMillis() - lastClickTime < 500) return;
+                    lastClickTime = System.currentTimeMillis();
+                    try {
+                        photoLauncher.launch("image/*");
+                    } catch (Exception e) {
+                        Toast.makeText(this, "Error opening gallery", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 enableEditing(true);
             } else {
                 binding.btnViewRequests.setVisibility(View.GONE);
@@ -189,6 +222,7 @@ public class WorkCardActivity extends AppCompatActivity {
                 binding.cardFullName.setText(fullName.trim().isEmpty() ? card.title : fullName.trim());
                 binding.cardProfession.setText(card.profession != null ? card.profession : "");
                 binding.cardAge.setText(getString(R.string.work_age_label, (card.age != null ? String.valueOf(card.age) : "—")));
+                binding.cardCity.setText(card.city != null ? getString(R.string.city_label, card.city) : "");
                 binding.btnAddExperience.setVisibility(View.GONE);
                 binding.colorPickerContainer.setVisibility(View.GONE);
                 binding.labelTheme.setVisibility(View.GONE);
@@ -199,11 +233,7 @@ public class WorkCardActivity extends AppCompatActivity {
             }
 
             if (card.photoUri != null) {
-                try {
-                    binding.cardPhoto.setImageURI(android.net.Uri.parse(card.photoUri));
-                } catch (Exception e) {
-                    binding.cardPhoto.setImageResource(R.drawable.ic_person);
-                }
+                loadPhoto(card.photoUri);
             } else {
                 binding.cardPhoto.setImageResource(R.drawable.ic_person);
             }
@@ -214,6 +244,7 @@ public class WorkCardActivity extends AppCompatActivity {
                 binding.inputLastName.setText(card.lastName != null ? card.lastName : "");
                 binding.inputAge.setText(card.age != null ? String.valueOf(card.age) : "");
                 binding.inputProfession.setText(card.profession != null ? card.profession : "");
+                binding.inputCity.setText(card.city != null ? card.city : "");
                 sessionMinutes = card.sessionMinutes > 0 ? card.sessionMinutes : 90;
                 workDaysMask = card.workDaysMask != 0 ? card.workDaysMask : WorkDays.defaultMonToFri();
                 binding.inputSessionMinutes.setText(String.valueOf(sessionMinutes));
@@ -311,7 +342,7 @@ public class WorkCardActivity extends AppCompatActivity {
 
     private void updateSlotsUi() {
         List<WorkBookingEntity> bookings = bookingsLiveData.getValue();
-        List<sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity> requests = requestsLiveData.getValue();
+        List<BookingRequestEntity> requests = requestsLiveData.getValue();
 
         Map<Integer, WorkBookingEntity> bookingsMap = new HashMap<>();
         if (bookings != null) {
@@ -320,9 +351,9 @@ public class WorkCardActivity extends AppCompatActivity {
             }
         }
 
-        Map<Integer, sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity> requestsMap = new HashMap<>();
+        Map<Integer, BookingRequestEntity> requestsMap = new HashMap<>();
         if (requests != null) {
-            for (sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity r : requests) {
+            for (BookingRequestEntity r : requests) {
                 if (r.dateEpochDay == selectedEpochDay) {
                     requestsMap.put(r.startMinutes, r);
                 }
@@ -333,7 +364,7 @@ public class WorkCardActivity extends AppCompatActivity {
         List<WorkSlotsAdapter.WorkSlotUi> ui = new ArrayList<>(starts.size());
         for (int start : starts) {
             WorkBookingEntity b = bookingsMap.get(start);
-            sevak.meliqsetyan.samsung_project_2.data.db.BookingRequestEntity r = requestsMap.get(start);
+            BookingRequestEntity r = requestsMap.get(start);
 
             boolean busy = b != null && !TextUtils.isEmpty(b.clientName);
             boolean pending = r != null;
@@ -385,7 +416,7 @@ public class WorkCardActivity extends AppCompatActivity {
                 String fullName = (myWorkCard.firstName != null ? myWorkCard.firstName : "") + " " + (myWorkCard.lastName != null ? myWorkCard.lastName : "");
                 myName = fullName.trim().isEmpty() ? myWorkCard.title : fullName.trim();
             } else {
-                sevak.meliqsetyan.samsung_project_2.data.db.UserProfileEntity profile = DbProvider.db(this).userProfileDao().getFirstSync();
+                UserProfileEntity profile = DbProvider.db(this).userProfileDao().getFirstSync();
                 if (profile != null) {
                     myName = (profile.firstName + " " + profile.lastName).trim();
                 }
@@ -415,7 +446,14 @@ public class WorkCardActivity extends AppCompatActivity {
         String firstName = textOrNull(binding.inputFirstName.getText() != null ? binding.inputFirstName.getText().toString() : "");
         String lastName = textOrNull(binding.inputLastName.getText() != null ? binding.inputLastName.getText().toString() : "");
         String profession = textOrNull(binding.inputProfession.getText() != null ? binding.inputProfession.getText().toString() : "");
+        String city = textOrNull(binding.inputCity.getText() != null ? binding.inputCity.getText().toString() : "");
         String myUid = FirebaseAuth.getInstance().getUid();
+
+        if (city != null && !city.matches("[a-zA-Z\\s\\-]+")) {
+            binding.inputCityLayout.setError(getString(R.string.error_english_only));
+            return;
+        }
+        binding.inputCityLayout.setError(null);
 
         Integer age = null;
         String ageStr = binding.inputAge.getText() != null ? binding.inputAge.getText().toString().trim() : "";
@@ -442,11 +480,20 @@ public class WorkCardActivity extends AppCompatActivity {
             card.firstName = firstName;
             card.lastName = lastName;
             card.profession = profession;
+            card.city = city;
             card.age = finalAge;
             card.sessionMinutes = finalSession;
             card.workDaysMask = workDaysMask;
             if (card.isSelf) {
                 card.ownerUid = myUid;
+                // Также обновляем основной профиль пользователя
+                UserProfileEntity profile = DbProvider.db(this).userProfileDao().getFirstSync();
+                if (profile != null) {
+                    profile.firstName = firstName;
+                    profile.lastName = lastName;
+                    profile.city = city;
+                    DbProvider.db(this).userProfileDao().update(profile);
+                }
             }
             DbProvider.db(this).cardDao().update(card);
         });

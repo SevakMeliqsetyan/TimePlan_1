@@ -61,10 +61,13 @@ public class SetupProfileActivity extends AppCompatActivity {
             binding.inputFirstNameLayout.setError(getString(R.string.enter_name_error));
             return;
         }
+        binding.inputFirstNameLayout.setError(null);
+
         if (TextUtils.isEmpty(lastName)) {
             binding.inputLastNameLayout.setError(getString(R.string.enter_name_error));
             return;
         }
+        binding.inputLastNameLayout.setError(null);
 
         binding.btnContinue.setEnabled(false);
 
@@ -92,7 +95,7 @@ public class SetupProfileActivity extends AppCompatActivity {
             var db = DbProvider.db(this);
             var userDao = db.userProfileDao();
             if (userDao.getFirstSync() == null) {
-                userDao.insert(new UserProfileEntity(firstName, lastName, System.currentTimeMillis()));
+                userDao.insert(new UserProfileEntity(firstName, lastName, "", System.currentTimeMillis()));
             }
 
             // Ensure one personal + one work "self" card exist.
@@ -106,8 +109,10 @@ public class SetupProfileActivity extends AppCompatActivity {
                 );
                 personalCard.ownerUid = uid;
                 db.cardDao().insert(personalCard);
-            } else if (personal.ownerUid == null && uid != null) {
-                personal.ownerUid = uid;
+            } else {
+                if (personal.ownerUid == null && uid != null) {
+                    personal.ownerUid = uid;
+                }
                 db.cardDao().update(personal);
             }
 
@@ -125,8 +130,12 @@ public class SetupProfileActivity extends AppCompatActivity {
                 workCard.sessionMinutes = 90;
                 workCard.workDaysMask = WorkDays.defaultMonToFri();
                 db.cardDao().insert(workCard);
-            } else if (work.ownerUid == null && uid != null) {
-                work.ownerUid = uid;
+            } else {
+                if (work.ownerUid == null && uid != null) {
+                    work.ownerUid = uid;
+                }
+                work.firstName = firstName;
+                work.lastName = lastName;
                 db.cardDao().update(work);
             }
 
