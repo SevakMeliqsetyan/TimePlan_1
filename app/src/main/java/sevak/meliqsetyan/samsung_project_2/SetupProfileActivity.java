@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import sevak.meliqsetyan.samsung_project_2.data.WorkDays;
 import sevak.meliqsetyan.samsung_project_2.data.db.CardEntity;
@@ -39,14 +40,99 @@ public class SetupProfileActivity extends AppCompatActivity {
         // If profile already exists and Firebase is connected - go straight to main.
         DbProvider.io().execute(() -> {
             UserProfileDao dao = DbProvider.db(this).userProfileDao();
-            UserProfileEntity first = dao.getFirstSync();
-            if (first != null && FirebaseAuth.getInstance().getCurrentUser() != null) {
+            UserProfileEntity localProfile = dao.getFirstSync();
+            String uid = FirebaseAuth.getInstance().getUid();
+
+            if (localProfile != null && uid != null) {
                 runOnUiThread(() -> {
                     startActivity(new Intent(this, MainActivity.class));
                     finish();
                 });
+                return;
+            }
+
+            if (uid != null) {
+                // Check Firestore for existing profile
+                FirebaseFirestore.getInstance().collection("users").document(uid).get()
+                        .addOnSuccessListener(documentSnapshot -> {
+                            if (documentSnapshot.exists()) {
+                                // Profile exists in cloud, restore it
+                                String fName = documentSnapshot.getString("firstName");
+                                String lName = documentSnapshot.getString("lastName");
+                                String city = documentSnapshot.getString("city");
+                                
+                                if (fName != null && lName != null) {
+                                    DbProvider.io().execute(() -> {
+                                        DbProvider.db(this).userProfileDao().insert(
+                                                new UserProfileEntity(fName, lName, city != null ? city : "", System.currentTimeMillis())
+                                        );
+                                        restoreSelfCards(uid);
+                                    });
+                                    return;
+                                }
+                            }
+                            // No profile in cloud, show UI
+                        });
             }
         });
+    }
+
+    private void restoreSelfCards(String uid) {
+        FirebaseFirestore.getInstance().collection("users").document(uid).collection("self_cards").get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    DbProvider.io().execute(() -> {
+                        for (com.google.firebase.firestore.DocumentSnapshot doc : queryDocumentSnapshots) {
+                            CardEntity card = doc.toObject(CardEntity.class);
+                            if (card != null) {
+                                card.id = 0; // Reset for local DB
+                                card.isSelf = true;
+                                card.ownerUid = uid;
+                                DbProvider.db(this).cardDao().insert(card);
+                            }
+                        }
+                        // After restoring, check if we still need to create defaults
+                        ensureDefaultCards(uid);
+                        
+                        runOnUiThread(() -> {
+                            startActivity(new Intent(this, MainActivity.class));
+                            finish();
+                        });
+                    });
+                });
+    }
+
+    private void ensureDefaultCards(String uid) {
+        // Logic moved from saveProfileAndFinish to be reusable
+        var db = DbProvider.db(this);
+        UserProfileEntity profile = db.userProfileDao().getFirstSync();
+        if (profile == null) return;
+
+        CardEntity personal = db.cardDao().getSelfByTypeSync("PERSONAL");
+        if (personal == null) {
+            CardEntity personalCard = new CardEntity("PERSONAL", profile.firstName + " " + profile.lastName, System.currentTimeMillis(), true);
+            personalCard.ownerUid = uid;
+            db.cardDao().insert(personalCard);
+            uploadSelfCard(uid, personalCard);
+        }
+
+        CardEntity work = db.cardDao().getSelfByTypeSync("WORK");
+        if (work == null) {
+            CardEntity workCard = new CardEntity("WORK", profile.firstName + " " + profile.lastName, System.currentTimeMillis(), true);
+            workCard.firstName = profile.firstName;
+            workCard.lastName = profile.lastName;
+            workCard.ownerUid = uid;
+            workCard.sessionMinutes = 90;
+            workCard.workDaysMask = WorkDays.defaultMonToFri();
+            db.cardDao().insert(workCard);
+            uploadSelfCard(uid, workCard);
+            uploadCardToPublic(workCard);
+        }
+    }
+
+    private void uploadSelfCard(String uid, CardEntity card) {
+        if (uid == null) return;
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+                .collection("self_cards").document(card.type).set(card);
     }
 
     private void onContinueClicked() {
@@ -94,8 +180,13 @@ public class SetupProfileActivity extends AppCompatActivity {
         DbProvider.io().execute(() -> {
             var db = DbProvider.db(this);
             var userDao = db.userProfileDao();
+            UserProfileEntity profile = new UserProfileEntity(firstName, lastName, "", System.currentTimeMillis());
             if (userDao.getFirstSync() == null) {
-                userDao.insert(new UserProfileEntity(firstName, lastName, "", System.currentTimeMillis()));
+                userDao.insert(profile);
+            }
+            
+            if (uid != null) {
+                FirebaseFirestore.getInstance().collection("users").document(uid).set(profile);
             }
 
             // Ensure one personal + one work "self" card exist.
@@ -109,11 +200,13 @@ public class SetupProfileActivity extends AppCompatActivity {
                 );
                 personalCard.ownerUid = uid;
                 db.cardDao().insert(personalCard);
+                uploadSelfCard(uid, personalCard);
             } else {
                 if (personal.ownerUid == null && uid != null) {
                     personal.ownerUid = uid;
                 }
                 db.cardDao().update(personal);
+                uploadSelfCard(uid, personal);
             }
 
             CardEntity work = db.cardDao().getSelfByTypeSync("WORK");
@@ -130,6 +223,10 @@ public class SetupProfileActivity extends AppCompatActivity {
                 workCard.sessionMinutes = 90;
                 workCard.workDaysMask = WorkDays.defaultMonToFri();
                 db.cardDao().insert(workCard);
+                if (uid != null) {
+                    uploadSelfCard(uid, workCard);
+                    uploadCardToPublic(workCard);
+                }
             } else {
                 if (work.ownerUid == null && uid != null) {
                     work.ownerUid = uid;
@@ -137,6 +234,10 @@ public class SetupProfileActivity extends AppCompatActivity {
                 work.firstName = firstName;
                 work.lastName = lastName;
                 db.cardDao().update(work);
+                if (work.ownerUid != null) {
+                    uploadSelfCard(uid, work);
+                    uploadCardToPublic(work);
+                }
             }
 
             runOnUiThread(() -> {
@@ -144,5 +245,12 @@ public class SetupProfileActivity extends AppCompatActivity {
                 finish();
             });
         });
+    }
+
+    private void uploadCardToPublic(CardEntity card) {
+        if (card.ownerUid == null) return;
+        FirebaseFirestore.getInstance().collection("users_public_cards")
+                .document(card.ownerUid)
+                .set(card);
     }
 }

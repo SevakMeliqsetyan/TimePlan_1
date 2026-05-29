@@ -156,4 +156,6 @@
     <string name="setup_city">Город (только англ.)</string>
     <string name="error_english_only">Разрешены только английские буквы</string>
     <string name="city_label">Город: %1$s</string>
+    <string name="btn_publish">Опубликовать</string>
+    <string name="publish_success">Опубликовано успешно!</string>
 </resources>

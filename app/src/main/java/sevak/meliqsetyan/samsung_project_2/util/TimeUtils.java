@@ -4,17 +4,23 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public final class TimeUtils {
+    private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd MMM, EEE", Locale.getDefault());
     private static final SimpleDateFormat DATE_LONG_FMT = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
     private static final SimpleDateFormat TIME_FMT = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
+    static {
+        DATE_FMT.setTimeZone(UTC);
+        DATE_LONG_FMT.setTimeZone(UTC);
+    }
+
     private TimeUtils() {}
 
     public static long todayEpochDay() {
-        Calendar cal = Calendar.getInstance();
-        return toEpochDay(cal);
+        return toEpochDay(Calendar.getInstance());
     }
 
     public static String formatTimeMinutes(int minutesFromMidnight) {
@@ -48,12 +54,24 @@ public final class TimeUtils {
     }
 
     public static long toEpochDay(Calendar cal) {
-        // Очищаем время для точного расчета дня
-        Calendar c = (Calendar) cal.clone();
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
+        Calendar c = Calendar.getInstance(UTC);
+        c.set(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
         c.set(Calendar.MILLISECOND, 0);
         return c.getTimeInMillis() / (24 * 60 * 60 * 1000L);
+    }
+
+    /**
+     * Возвращает абсолютное время (millis) для указанного дня и минут,
+     * учитывая текущую временную зону пользователя.
+     */
+    public static long getLocalMillis(long epochDay, int timeMinutes) {
+        Calendar utcCal = Calendar.getInstance(UTC);
+        utcCal.setTimeInMillis(epochDay * 24 * 60 * 60 * 1000L);
+
+        Calendar localCal = Calendar.getInstance();
+        localCal.set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        localCal.set(Calendar.MILLISECOND, 0);
+        localCal.add(Calendar.MINUTE, timeMinutes);
+        return localCal.getTimeInMillis();
     }
 }

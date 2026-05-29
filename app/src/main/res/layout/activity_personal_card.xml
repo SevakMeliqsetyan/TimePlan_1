@@ -15,7 +15,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:titleTextColor="?attr/colorOnSurface"
         app:navigationIcon="@drawable/ic_back"
-        app:navigationIconTint="?attr/colorOnSurface"
         tools:title="Личный календарь" />
 
     <!-- Контейнер для календаря -->

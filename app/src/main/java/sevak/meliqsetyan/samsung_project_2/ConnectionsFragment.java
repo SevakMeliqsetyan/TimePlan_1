@@ -112,6 +112,11 @@ public class ConnectionsFragment extends Fragment {
                 }
             }
         });
+        binding.btnExplore.setOnClickListener(v -> {
+            if (System.currentTimeMillis() - lastClickTime < 500) return;
+            lastClickTime = System.currentTimeMillis();
+            startActivity(new Intent(getContext(), ExploreActivity.class));
+        });
     }
 
     private void showMyQrDialog() {

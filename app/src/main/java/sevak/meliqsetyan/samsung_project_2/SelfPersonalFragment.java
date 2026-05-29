@@ -48,6 +48,17 @@ public class SelfPersonalFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         binding.toolbar.setNavigationIcon(null);
+        binding.toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_close) {
+                // Переключаемся на вкладку Расписания (Work)
+                if (getActivity() instanceof MainActivity) {
+                    com.google.android.material.bottomnavigation.BottomNavigationView nav = getActivity().findViewById(R.id.bottom_navigation);
+                    if (nav != null) nav.setSelectedItemId(R.id.nav_work);
+                }
+                return true;
+            }
+            return false;
+        });
 
         tasksAdapter = new PersonalTasksAdapter(task -> {
             new MaterialAlertDialogBuilder(requireContext())
@@ -124,7 +135,8 @@ public class SelfPersonalFragment extends Fragment {
     private void scheduleNotification(long taskId, long epochDay, int timeMinutes, String title, int reminderBeforeMinutes) {
         if (reminderBeforeMinutes < 0) return;
 
-        long triggerAtMillis = TimeUtils.epochDayToMillis(epochDay) + (timeMinutes * 60000L) - (reminderBeforeMinutes * 60000L);
+        long taskTimeMillis = TimeUtils.getLocalMillis(epochDay, timeMinutes);
+        long triggerAtMillis = taskTimeMillis - (reminderBeforeMinutes * 60000L);
         
         // Don't schedule if time is in the past
         if (triggerAtMillis < System.currentTimeMillis()) return;

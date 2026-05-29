@@ -185,11 +185,18 @@ public class SelfWorkFragment extends Fragment {
                 binding.scheduleContainer.setVisibility(View.GONE);
                 binding.myCardContainer.setVisibility(View.GONE);
                 binding.profileCard.setVisibility(View.VISIBLE);
+                item.setVisible(false);
+                binding.toolbar.getMenu().findItem(R.id.action_close).setVisible(true);
                 return true;
             } else if (item.getItemId() == R.id.action_my_card) {
                 binding.scheduleContainer.setVisibility(View.GONE);
                 binding.profileCard.setVisibility(View.GONE);
                 binding.myCardContainer.setVisibility(View.VISIBLE);
+                item.setVisible(false);
+                binding.toolbar.getMenu().findItem(R.id.action_close).setVisible(true);
+                return true;
+            } else if (item.getItemId() == R.id.action_close) {
+                showSchedule();
                 return true;
             }
             return false;
@@ -198,11 +205,27 @@ public class SelfWorkFragment extends Fragment {
         observeCard();
     }
 
+    private void showSchedule() {
+        binding.profileCard.setVisibility(View.GONE);
+        binding.myCardContainer.setVisibility(View.GONE);
+        binding.scheduleContainer.setVisibility(View.VISIBLE);
+        binding.toolbar.getMenu().findItem(R.id.action_close).setVisible(false);
+        
+        // Перечитываем состояние карточки, чтобы восстановить видимость иконок
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(requireContext()).cardDao().getSelfByTypeSync("WORK");
+            if (card != null && getActivity() != null) {
+                getActivity().runOnUiThread(() -> onCardChanged(card));
+            }
+        });
+    }
+
     private void logout() {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.logout_title)
                 .setMessage(R.string.logout_confirm_message)
                 .setPositiveButton(R.string.logout_btn, (dialog, which) -> {
+                    DbProvider.clearDatabase(requireContext());
                     com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
                     android.content.Intent intent = new android.content.Intent(requireContext(), LoginActivity.class);
                     intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -226,6 +249,7 @@ public class SelfWorkFragment extends Fragment {
                             DbProvider.db(requireContext()).workExperienceDao().insert(
                                     new WorkExperienceEntity(cardId, label, value)
                             );
+                            syncSelfCardToPublic();
                         });
                     }
                 })
@@ -240,6 +264,7 @@ public class SelfWorkFragment extends Fragment {
                 .setPositiveButton(R.string.dialog_delete, (dialog, which) -> {
                     DbProvider.io().execute(() -> {
                         DbProvider.db(requireContext()).workExperienceDao().deleteById(experience.id);
+                        syncSelfCardToPublic();
                     });
                 })
                 .setNegativeButton(R.string.dialog_cancel, null)
@@ -481,10 +506,39 @@ public class SelfWorkFragment extends Fragment {
             card.workEndMinutes = workEndMinutes;
             card.breakStartMinutes = breakStartMinutes;
             card.breakEndMinutes = breakEndMinutes;
+            
+            String myUid = com.google.firebase.auth.FirebaseAuth.getInstance().getUid();
+            if (myUid != null) {
+                card.ownerUid = myUid;
+            }
+
             DbProvider.db(requireContext()).cardDao().update(card);
+            
+            if (myUid != null) {
+                uploadCardToPublic(card);
+            }
         });
 
         observeSelectedDayBookings();
+    }
+
+    private void syncSelfCardToPublic() {
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(requireContext()).cardDao().getSelfByTypeSync("WORK");
+            if (card != null && card.ownerUid != null) {
+                uploadCardToPublic(card);
+            }
+        });
+    }
+
+    private void uploadCardToPublic(CardEntity card) {
+        if (card.ownerUid == null) return;
+        DbProvider.io().execute(() -> {
+            card.experienceList = DbProvider.db(requireContext()).workExperienceDao().getByCardIdSync(card.id);
+            com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("users_public_cards")
+                    .document(card.ownerUid)
+                    .set(card);
+        });
     }
 
     private void saveSlot(int startMinutes, String clientName) {
@@ -494,10 +548,39 @@ public class SelfWorkFragment extends Fragment {
         DbProvider.io().execute(() -> {
             if (TextUtils.isEmpty(name)) {
                 DbProvider.db(requireContext()).workBookingDao().deleteSlot(cardId, selectedEpochDay, startMinutes);
+                deleteManualBookingFromFirestore(selectedEpochDay, startMinutes);
             } else {
                 DbProvider.db(requireContext()).workBookingDao().insert(new WorkBookingEntity(cardId, selectedEpochDay, startMinutes, name));
+                uploadManualBookingToFirestore(selectedEpochDay, startMinutes, name);
             }
         });
+    }
+
+    private void uploadManualBookingToFirestore(long dateEpochDay, int startMinutes, String clientName) {
+        String myUid = FirebaseAuth.getInstance().getUid();
+        if (myUid == null) return;
+
+        Map<String, Object> booking = new HashMap<>();
+        booking.put("targetOwnerUid", myUid);
+        booking.put("requesterUid", "manual");
+        booking.put("requesterName", clientName);
+        booking.put("dateEpochDay", dateEpochDay);
+        booking.put("startMinutes", startMinutes);
+        booking.put("status", "ACCEPTED");
+        booking.put("timestamp", System.currentTimeMillis());
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("booking_requests")
+                .document(myUid + "_" + dateEpochDay + "_" + startMinutes)
+                .set(booking);
+    }
+
+    private void deleteManualBookingFromFirestore(long dateEpochDay, int startMinutes) {
+        String myUid = FirebaseAuth.getInstance().getUid();
+        if (myUid == null) return;
+
+        com.google.firebase.firestore.FirebaseFirestore.getInstance().collection("booking_requests")
+                .document(myUid + "_" + dateEpochDay + "_" + startMinutes)
+                .delete();
     }
 
     private void savePhotoUri(String uri) {
@@ -506,6 +589,9 @@ public class SelfWorkFragment extends Fragment {
             if (card != null) {
                 card.photoUri = uri;
                 DbProvider.db(requireContext()).cardDao().update(card);
+                if (card.ownerUid != null) {
+                    uploadCardToPublic(card);
+                }
             }
         });
     }
@@ -516,6 +602,9 @@ public class SelfWorkFragment extends Fragment {
             if (card != null) {
                 card.backgroundColor = color;
                 DbProvider.db(requireContext()).cardDao().update(card);
+                if (card.ownerUid != null) {
+                    uploadCardToPublic(card);
+                }
             }
         });
     }

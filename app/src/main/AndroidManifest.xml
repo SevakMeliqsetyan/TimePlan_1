@@ -53,6 +53,10 @@
             android:name=".WorkCardActivity"
             android:exported="false" />
         <activity
+            android:name=".ExploreActivity"
+            android:exported="false"
+            android:label="@string/explore_title" />
+        <activity
             android:name=".SetupProfileActivity"
             android:exported="false" />
     </application>

@@ -1,15 +1,15 @@
 package sevak.meliqsetyan.samsung_project_2;
 
+import sevak.meliqsetyan.samsung_project_2.databinding.ActivityLoginBinding;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import sevak.meliqsetyan.samsung_project_2.data.db.DbProvider;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -18,8 +18,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText etEmail, etPassword;
-    private Button btnLogin, btnRegisterRedirect;
+    private ActivityLoginBinding binding;
     private FirebaseAuth auth;
 
     @Override
@@ -44,26 +43,20 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_login);
-
-        // Находим элементы
-        etEmail = findViewById(R.id.etEmail);
-        etPassword = findViewById(R.id.etPassword);
-        btnLogin = findViewById(R.id.btnLogin);
-        btnRegisterRedirect = findViewById(R.id.btnRegisterRedirect);
-        Button btnTestUser = findViewById(R.id.btnTestUser);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
         // Кнопка для тестового пользователя
-        btnTestUser.setOnClickListener(new View.OnClickListener() {
+        binding.btnTestUser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                etEmail.setText("innovationcampus26@gmail.com");
-                etPassword.setText("Samsung2026");
+                binding.etEmail.setText("innovationcampus26@gmail.com");
+                binding.etPassword.setText("Samsung2026");
             }
         });
 
         // Переход на регистрацию
-        btnRegisterRedirect.setOnClickListener(new View.OnClickListener() {
+        binding.btnRegisterRedirect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
@@ -72,11 +65,11 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         // Вход через Firebase
-        btnLogin.setOnClickListener(new View.OnClickListener() {
+        binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String email = etEmail.getText().toString().trim();
-                String password = etPassword.getText().toString().trim();
+                String email = binding.etEmail.getText().toString().trim();
+                String password = binding.etPassword.getText().toString().trim();
 
                 if (email.isEmpty() || password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, R.string.fill_all_fields, Toast.LENGTH_SHORT).show();
@@ -88,6 +81,7 @@ public class LoginActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
+                                    DbProvider.clearDatabase(LoginActivity.this);
                                     Toast.makeText(LoginActivity.this, R.string.login_success, Toast.LENGTH_SHORT).show();
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);

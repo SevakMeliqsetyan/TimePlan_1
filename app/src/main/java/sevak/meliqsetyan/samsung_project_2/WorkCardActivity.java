@@ -51,10 +51,16 @@ public class WorkCardActivity extends AppCompatActivity {
 
     private int sessionMinutes = 90;
     private int workDaysMask = WorkDays.defaultMonToFri();
+    private int workStartMinutes = 9 * 60;
+    private int workEndMinutes = 20 * 60;
+    private Integer breakStartMinutes = null;
+    private Integer breakEndMinutes = null;
 
     private WorkSlotsAdapter slotsAdapter;
     private LiveData<List<WorkBookingEntity>> bookingsLiveData;
     private LiveData<List<BookingRequestEntity>> requestsLiveData;
+    private com.google.firebase.firestore.ListenerRegistration firestoreBookingsListener;
+    private Map<Integer, String> externalBookings = new HashMap<>();
 
     private boolean profileInitialized = false;
 
@@ -116,6 +122,9 @@ public class WorkCardActivity extends AppCompatActivity {
             if (card != null) {
                 card.photoUri = uri;
                 DbProvider.db(this).cardDao().update(card);
+                if (card.isSelf && "WORK".equals(card.type)) {
+                    uploadCardToPublic(card);
+                }
             }
         });
     }
@@ -180,6 +189,16 @@ public class WorkCardActivity extends AppCompatActivity {
         setupColorPicker();
 
         binding.btnSaveProfile.setOnClickListener(v -> saveProfile());
+        binding.btnPublish.setOnClickListener(v -> {
+            DbProvider.io().execute(() -> {
+                CardEntity card = DbProvider.db(this).cardDao().getByIdSync(cardId);
+                if (card != null) {
+                    uploadCardToPublic(card);
+                    runOnUiThread(() -> Toast.makeText(this, R.string.publish_success, Toast.LENGTH_SHORT).show());
+                }
+            });
+        });
+        binding.btnLogout.setOnClickListener(v -> logout());
         binding.btnDisconnect.setOnClickListener(v -> confirmDisconnect());
         binding.btnViewRequests.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(this, RequestsActivity.class);
@@ -197,8 +216,9 @@ public class WorkCardActivity extends AppCompatActivity {
             if (isSelfCard) {
                 binding.btnViewRequests.setVisibility(View.VISIBLE);
                 binding.profileCard.setVisibility(View.VISIBLE);
-                binding.myCardContainer.setVisibility(View.GONE);
+                binding.myCardContainer.setVisibility(View.VISIBLE);
                 binding.btnSaveProfile.setVisibility(View.VISIBLE);
+                binding.btnPublish.setVisibility(View.VISIBLE);
                 binding.btnDisconnect.setVisibility(View.GONE);
                 binding.cardPhotoContainer.setOnClickListener(v -> {
                     if (System.currentTimeMillis() - lastClickTime < 500) return;
@@ -215,6 +235,7 @@ public class WorkCardActivity extends AppCompatActivity {
                 binding.profileCard.setVisibility(View.GONE);
                 binding.myCardContainer.setVisibility(View.VISIBLE);
                 binding.btnSaveProfile.setVisibility(View.GONE);
+                binding.btnPublish.setVisibility(View.GONE);
                 binding.btnDisconnect.setVisibility(View.VISIBLE);
 
                 // Заполняем данные для просмотра
@@ -237,6 +258,11 @@ public class WorkCardActivity extends AppCompatActivity {
             } else {
                 binding.cardPhoto.setImageResource(R.drawable.ic_person);
             }
+
+            workStartMinutes = card.workStartMinutes > 0 ? card.workStartMinutes : 9 * 60;
+            workEndMinutes = card.workEndMinutes > 0 ? card.workEndMinutes : 20 * 60;
+            breakStartMinutes = card.breakStartMinutes;
+            breakEndMinutes = card.breakEndMinutes;
 
             if (!profileInitialized) {
                 profileInitialized = true;
@@ -284,6 +310,9 @@ public class WorkCardActivity extends AppCompatActivity {
             if (card != null) {
                 card.backgroundColor = color;
                 DbProvider.db(this).cardDao().update(card);
+                if (card.isSelf && "WORK".equals(card.type)) {
+                    uploadCardToPublic(card);
+                }
             }
         });
     }
@@ -335,12 +364,53 @@ public class WorkCardActivity extends AppCompatActivity {
         bookingsLiveData = DbProvider.db(this).workBookingDao().observeForDay(cardId, selectedEpochDay);
         requestsLiveData = DbProvider.db(this).bookingRequestDao().observePendingForCard(cardId);
 
-        // Используем MediatorLiveData или просто обновляем при изменении любого из источников
+        // Use a MediatorLiveData or just update when either source changes
         bookingsLiveData.observe(this, bookings -> updateSlotsUi());
         requestsLiveData.observe(this, requests -> updateSlotsUi());
+
+        if (!isSelfCard) {
+            fetchRemoteBookings();
+        } else {
+            externalBookings.clear();
+        }
+    }
+
+    private void fetchRemoteBookings() {
+        if (firestoreBookingsListener != null) firestoreBookingsListener.remove();
+        
+        DbProvider.io().execute(() -> {
+            CardEntity card = DbProvider.db(this).cardDao().getByIdSync(cardId);
+            if (card == null || card.ownerUid == null) return;
+            
+            runOnUiThread(() -> {
+                firestoreBookingsListener = FirebaseFirestore.getInstance().collection("booking_requests")
+                        .whereEqualTo("targetOwnerUid", card.ownerUid)
+                        .whereEqualTo("dateEpochDay", selectedEpochDay)
+                        .whereEqualTo("status", "ACCEPTED")
+                        .addSnapshotListener((value, error) -> {
+                            if (error != null || value == null) return;
+                            externalBookings.clear();
+                            for (com.google.firebase.firestore.DocumentSnapshot doc : value.getDocuments()) {
+                                Long start = doc.getLong("startMinutes");
+                                String name = doc.getString("requesterName");
+                                if (start != null) {
+                                    externalBookings.put(start.intValue(), name != null ? name : "");
+                                }
+                            }
+                            updateSlotsUi();
+                        });
+            });
+        });
     }
 
     private void updateSlotsUi() {
+        if (!isWorkDay(selectedEpochDay)) {
+            binding.dayHint.setText(R.string.work_day_hint_off);
+            slotsAdapter.submitList(new ArrayList<>());
+            return;
+        }
+        binding.dayHint.setText(R.string.work_day_hint_working);
+
         List<WorkBookingEntity> bookings = bookingsLiveData.getValue();
         List<BookingRequestEntity> requests = requestsLiveData.getValue();
 
@@ -365,13 +435,31 @@ public class WorkCardActivity extends AppCompatActivity {
         for (int start : starts) {
             WorkBookingEntity b = bookingsMap.get(start);
             BookingRequestEntity r = requestsMap.get(start);
+            String externalClient = externalBookings.get(start);
 
-            boolean busy = b != null && !TextUtils.isEmpty(b.clientName);
+            boolean busy = (b != null && !TextUtils.isEmpty(b.clientName)) || (externalClient != null);
             boolean pending = r != null;
+            String clientName = busy ? (b != null ? b.clientName : externalClient) : null;
 
-            ui.add(new WorkSlotsAdapter.WorkSlotUi(start, busy, pending, busy ? b.clientName : null));
+            ui.add(new WorkSlotsAdapter.WorkSlotUi(start, busy, pending, clientName));
         }
         slotsAdapter.submitList(ui);
+    }
+
+    private boolean isWorkDay(long epochDay) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(TimeUtils.epochDayToMillis(epochDay));
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK); // 1 (Sun) to 7 (Sat)
+        
+        int index;
+        if (dayOfWeek == Calendar.SUNDAY) {
+            index = 6;
+        } else {
+            index = dayOfWeek - 2;
+        }
+        
+        int bit = 1 << index;
+        return (workDaysMask & bit) != 0;
     }
 
     private void enableEditing(boolean enabled) {
@@ -431,9 +519,16 @@ public class WorkCardActivity extends AppCompatActivity {
             requestData.put("status", "PENDING");
             requestData.put("timestamp", System.currentTimeMillis());
 
+            String finalMyName = myName;
             FirebaseFirestore.getInstance().collection("booking_requests")
                     .add(requestData)
                     .addOnSuccessListener(documentReference -> {
+                        DbProvider.io().execute(() -> {
+                            BookingRequestEntity localRequest = new BookingRequestEntity(
+                                    cardId, 0, finalMyName, selectedEpochDay, slot.startMinutes
+                            );
+                            DbProvider.db(this).bookingRequestDao().insert(localRequest);
+                        });
                         runOnUiThread(() -> Toast.makeText(this, R.string.request_sent_success, Toast.LENGTH_SHORT).show());
                     })
                     .addOnFailureListener(e -> {
@@ -496,9 +591,22 @@ public class WorkCardActivity extends AppCompatActivity {
                 }
             }
             DbProvider.db(this).cardDao().update(card);
+            if (card.isSelf && "WORK".equals(card.type)) {
+                uploadCardToPublic(card);
+            }
         });
 
         observeSelectedDayBookings();
+    }
+
+    private void uploadCardToPublic(CardEntity card) {
+        if (card.ownerUid == null) return;
+        DbProvider.io().execute(() -> {
+            card.experienceList = DbProvider.db(this).workExperienceDao().getByCardIdSync(card.id);
+            FirebaseFirestore.getInstance().collection("users_public_cards")
+                    .document(card.ownerUid)
+                    .set(card);
+        });
     }
 
     private void confirmDisconnect() {
@@ -506,6 +614,22 @@ public class WorkCardActivity extends AppCompatActivity {
                 .setTitle(R.string.disconnect_confirm_title)
                 .setMessage(R.string.disconnect_confirm_message)
                 .setPositiveButton(R.string.dialog_delete, (dialog, which) -> disconnectCard())
+                .setNegativeButton(R.string.dialog_cancel, null)
+                .show();
+    }
+
+    private void logout() {
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.logout_title)
+                .setMessage(R.string.logout_confirm_message)
+                .setPositiveButton(R.string.logout_btn, (dialog, which) -> {
+                    DbProvider.clearDatabase(this);
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut();
+                    android.content.Intent intent = new android.content.Intent(this, LoginActivity.class);
+                    intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+                })
                 .setNegativeButton(R.string.dialog_cancel, null)
                 .show();
     }
@@ -525,10 +649,39 @@ public class WorkCardActivity extends AppCompatActivity {
         DbProvider.io().execute(() -> {
             if (TextUtils.isEmpty(name)) {
                 DbProvider.db(this).workBookingDao().deleteSlot(cardId, selectedEpochDay, startMinutes);
+                deleteManualBookingFromFirestore(selectedEpochDay, startMinutes);
             } else {
                 DbProvider.db(this).workBookingDao().insert(new WorkBookingEntity(cardId, selectedEpochDay, startMinutes, name));
+                uploadManualBookingToFirestore(selectedEpochDay, startMinutes, name);
             }
         });
+    }
+
+    private void uploadManualBookingToFirestore(long dateEpochDay, int startMinutes, String clientName) {
+        String myUid = FirebaseAuth.getInstance().getUid();
+        if (myUid == null) return;
+
+        Map<String, Object> booking = new HashMap<>();
+        booking.put("targetOwnerUid", myUid);
+        booking.put("requesterUid", "manual");
+        booking.put("requesterName", clientName);
+        booking.put("dateEpochDay", dateEpochDay);
+        booking.put("startMinutes", startMinutes);
+        booking.put("status", "ACCEPTED");
+        booking.put("timestamp", System.currentTimeMillis());
+
+        FirebaseFirestore.getInstance().collection("booking_requests")
+                .document(myUid + "_" + dateEpochDay + "_" + startMinutes)
+                .set(booking);
+    }
+
+    private void deleteManualBookingFromFirestore(long dateEpochDay, int startMinutes) {
+        String myUid = FirebaseAuth.getInstance().getUid();
+        if (myUid == null) return;
+
+        FirebaseFirestore.getInstance().collection("booking_requests")
+                .document(myUid + "_" + dateEpochDay + "_" + startMinutes)
+                .delete();
     }
 
     private static String textOrNull(String value) {
@@ -536,12 +689,24 @@ public class WorkCardActivity extends AppCompatActivity {
         return TextUtils.isEmpty(v) ? null : v;
     }
 
-    private static List<Integer> computeSlotStarts(int sessionMinutes) {
+    private List<Integer> computeSlotStarts(int sessionMinutes) {
         int step = Math.max(15, sessionMinutes);
         List<Integer> starts = new ArrayList<>();
-        for (int start = DAY_START_MIN; start + step <= DAY_END_MIN; start += step) {
+        for (int start = workStartMinutes; start + step <= workEndMinutes; start += step) {
+            if (breakStartMinutes != null && breakEndMinutes != null) {
+                int bStart = Math.min(breakStartMinutes, breakEndMinutes);
+                int bEnd = Math.max(breakStartMinutes, breakEndMinutes);
+                int slotEnd = start + step;
+                if (start < bEnd && slotEnd > bStart) continue;
+            }
             starts.add(start);
         }
         return starts;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (firestoreBookingsListener != null) firestoreBookingsListener.remove();
+        super.onDestroy();
     }
 }

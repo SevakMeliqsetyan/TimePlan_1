@@ -161,10 +161,8 @@ public class PersonalCardActivity extends AppCompatActivity {
 
         Intent intent = new Intent(this, TaskNotificationReceiver.class);
         intent.putExtra(TaskNotificationReceiver.EXTRA_TASK_TITLE, task.title);
-        // Important: Use a unique URI so the system treats each alarm independently
         intent.setData(android.net.Uri.parse("task://" + task.id + "_" + System.currentTimeMillis()));
 
-        // Use FLAG_MUTABLE on S+ to allow the system to handle the intent correctly in the background
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             flags |= PendingIntent.FLAG_MUTABLE;
@@ -174,20 +172,10 @@ public class PersonalCardActivity extends AppCompatActivity {
 
         PendingIntent pi = PendingIntent.getBroadcast(this, (int) task.id, intent, flags);
 
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(TimeUtils.epochDayToMillis(task.dateEpochDay));
-        cal.set(Calendar.HOUR_OF_DAY, task.timeMinutes / 60);
-        cal.set(Calendar.MINUTE, task.timeMinutes % 60);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
+        long taskTimeMillis = TimeUtils.getLocalMillis(task.dateEpochDay, task.timeMinutes);
+        long notifyTime = taskTimeMillis - ((long) task.reminderBeforeMinutes * 60 * 1000);
 
-        long notifyTime = cal.getTimeInMillis() - ((long) task.reminderBeforeMinutes * 60 * 1000);
-
-        // Debug: if time is within reminder period, we can't schedule it in the past. 
-        // But for testing purposes, if you want it to fire now if it's too close, you'd change this.
         if (notifyTime <= System.currentTimeMillis()) {
-            // If the task is more than reminderBeforeMinutes away, this shouldn't happen.
-            // If it's less, notifyTime will be in the past.
             return;
         }
 

@@ -75,6 +75,10 @@
     <string name="connections_subtitle">Other people\'s cards will appear here</string>
     <string name="btn_my_qr">My QR</string>
     <string name="btn_scan_qr">Scan QR</string>
+    <string name="btn_explore">Explore</string>
+    <string name="explore_title">All Users</string>
+    <string name="add_card_confirm_title">Add Card?</string>
+    <string name="add_card_confirm_message">Do you want to add %1$s\'s card to your connections?</string>
     <string name="qr_dialog_title">Your Card QR</string>
     <string name="qr_scan_success">Card added!</string>
     <string name="qr_scan_error">Invalid QR Code</string>
@@ -84,7 +88,9 @@
     <string name="setup_subtitle">Enter your name once. We will use it later in your cards.</string>
     <string name="setup_first_name">First Name</string>
     <string name="setup_last_name">Last Name</string>
-    <string name="setup_city">City (English only)</string>
+    <string name="setup_city">City</string>
+    <string name="city">City</string>
+    <string name="profession">Profession</string>
     <string name="setup_continue">Continue</string>
     <string name="error_english_only">Only English letters allowed</string>
 
@@ -174,5 +180,15 @@
     <string name="open_settings_error">Could not open settings</string>
     <string name="city_label">City: %1$s</string>
     <string name="logo_content_description">TimePlan Logo</string>
-    <string name="btn_test_user">Test User</string>
+    <string name="login_welcome">Welcome Back</string>
+    <string name="login_subtitle">Please sign in to continue</string>
+    <string name="login_btn_sign_in">Sign In</string>
+    <string name="login_no_account">Don\'t have an account? Sign Up</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Fill in your details to get started</string>
+    <string name="register_btn_create">Create Account</string>
+    <string name="register_have_account">Already have an account? Sign In</string>
+    <string name="btn_test_user">Test User Mode</string>
+    <string name="btn_publish">Publish</string>
+    <string name="publish_success">Published successfully!</string>
 </resources>

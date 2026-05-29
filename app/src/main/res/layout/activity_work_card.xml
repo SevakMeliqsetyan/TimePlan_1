@@ -20,19 +20,25 @@
             android:layout_height="wrap_content"
             android:titleTextColor="?attr/colorOnSurface"
             app:menu="@menu/menu_work_profile"
-            app:navigationIcon="@drawable/ic_back"
-            app:navigationIconTint="?attr/colorOnSurface"
             tools:title="Имя Фамилия">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_view_requests"
                 style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="end"
-                android:text="@string/btn_view_requests"
+                android:insetLeft="0dp"
+                android:insetTop="0dp"
+                android:insetRight="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
                 android:visibility="gone"
                 app:icon="@drawable/ic_notifications"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="24dp"
+                app:iconTint="?attr/colorPrimary"
                 tools:visibility="visible" />
 
         </com.google.android.material.appbar.MaterialToolbar>
@@ -781,6 +787,17 @@
                             android:textColor="?attr/colorError"
                             app:icon="@drawable/ic_delete"
                             app:iconTint="?attr/colorError" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_publish"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/btn_publish"
+                            app:cornerRadius="16dp"
+                            android:padding="12dp"
+                            app:backgroundTint="?attr/colorSecondary"
+                            android:textColor="@android:color/white" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>

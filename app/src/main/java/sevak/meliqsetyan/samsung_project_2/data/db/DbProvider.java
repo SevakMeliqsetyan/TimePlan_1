@@ -33,5 +33,15 @@ public final class DbProvider {
     public static ExecutorService io() {
         return io;
     }
+
+    public static void clearDatabase(Context context) {
+        io.execute(() -> {
+            if (db != null) {
+                db.clearAllTables();
+            } else {
+                db(context).clearAllTables();
+            }
+        });
+    }
 }
 
